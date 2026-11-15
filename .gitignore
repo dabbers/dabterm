@@ -29,3 +29,6 @@ id_*
 
 # macOS
 .DS_Store
+
+# Python iOS framework (fetch with scripts/fetch-python.sh)
+Vendor/

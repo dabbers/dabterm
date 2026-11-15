@@ -22,11 +22,25 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
-| Scripting | `js` / `node` (JavaScriptCore), `sh` |
+| Scripting | `python` (CPython 3.13), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
 | Shell | `help clear history env export unset alias which date uname sleep sh` |
 
 `ping` and `traceroute` use ICMP datagram sockets (no root needed on iOS). `dig` is a small DNS
 client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
+
+**Python.** Real CPython 3.13 (the official iOS build, via BeeWare's Python-Apple-support), bundled
+with the full standard library including `ssl`, `sqlite3`, `hashlib`, `asyncio`, `ctypes`, `decimal`,
+`zlib`/`bz2`/`lzma`. `python file.py [args]`, `python -c`, `python -m module`, piped stdin, or a REPL;
+`.py` files in `~/bin` run by name; `input()` reads from the terminal. Pure-Python packages dropped
+into `~/site-packages` are importable. The interpreter is embedded (one per process, scripts run one
+at a time), which is what Apple allows. The framework is not in git: run `scripts/fetch-python.sh`
+before building, or the build still succeeds and `python` explains it is missing. ~22 MB in the app.
+
+**WebAssembly.** `wasm file.wasm [args]` runs WASI modules on WasmKit, a pure-Swift interpreter
+(App Store safe). stdin/stdout/stderr are wired to the shell, `~` is pre-opened as `/` and the
+current folder as `.`, `--dir host:guest` adds more. `.wasm` files in `~/bin` run by name and packs
+can ship `"kind": "wasm"` commands. This is the path for C/C++/Rust tools compiled with wasi-sdk
+(bring your own `.wasm`; no compiler runs on the phone).
 
 **JavaScript.** `js file.js [args]`, `node -e 'code'`, `node -p expr`, piped stdin, or a REPL. Runs on
 the system JavaScriptCore engine (App Store safe: nothing is downloaded or JIT-compiled) with a small
@@ -55,8 +69,15 @@ Shortcuts and other apps: `dabterm://open?path=~/x.md&line=10`, `dabterm://run?c
 undo/redo, go-to-line, line wrapping, tabs, a file tree with create/rename/delete/share, and a
 Source Control panel. The iOS keyboard's space-bar trackpad works for moving the cursor.
 
-**Key bar.** Above the keyboard in both the terminal and the editor: Esc, Tab, sticky Ctrl and Alt,
-arrows (long-press to repeat), Home/End, `- / | ~ \` ' " { } [ ] < > $ &`, paste, hide keyboard.
+**Key bar.** Above the keyboard in both the terminal and the editor: **sel**, **copy**, cut (editor),
+paste, Esc, Tab, sticky Ctrl and Alt, arrows (long-press to repeat), Home/End,
+`- / | ~ \` ' " { } [ ] < > $ &`, **all**, hide keyboard.
+
+**Selecting text on a touch screen.** Tap **sel** and drag anywhere to highlight, across as many lines
+as you like, then tap **copy**. No long-press, no handles. In the editor, arrows extend the selection
+while sel is on, and cut/paste work on it. **all** selects everything; **copy** with nothing selected
+copies the whole terminal scrollback. The terminal's native long-press menu and the editor's native
+long-press selection still work too.
 
 **git.** `git clone owner/repo`, `status`, `add`, `commit -m` (commits *and* pushes), `pull`, `log`,
 `branch`, `checkout [-b]`, `diff`, `show HEAD:path`, `remote -v`, `git init owner/repo` to link an
@@ -117,24 +138,24 @@ Consequences:
 
 ## Build
 
-Requirements: Xcode 16+, [xcodegen](https://github.com/yonaskolb/XcodeGen), Node 18+ (only to
-rebuild the editor bundle).
+Requirements: Xcode 16+ (iOS 18 deployment target), [xcodegen](https://github.com/yonaskolb/XcodeGen),
+Node 18+ (only to rebuild the editor bundle).
 
 ```bash
 brew install xcodegen
+scripts/fetch-python.sh        # optional: bundle CPython 3.13 (~35 MB download)
 xcodegen generate
 open dabterm.xcodeproj
 ```
 
-Select your team under Signing, pick a device or simulator, run. Xcode will ask you to trust the
-SwiftTerm build plugin the first time.
+Select your team under Signing, pick a device or simulator, run.
 
 Command line:
 
 ```bash
 xcodebuild -project dabterm.xcodeproj -scheme dabterm \
   -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max' \
-  -skipPackagePluginValidation build
+  build
 ```
 
 Rebuild the editor after changing `dabterm/Editor/web/src/editor.js`:
@@ -173,6 +194,9 @@ dabterm/
   Resources/packs/   packs bundled with the app (see Tool packs)
 scripts/sync-packs.sh  refresh bundled packs from a packs repo before a release
 Packages/DabCrypto/   libcrypto code in its own module (see note below)
+Packages/SwiftTerm/   vendored SwiftTerm 1.99.3 + one extension file exposing selection for the sel key
+Vendor/python-ios/    Python.xcframework (gitignored; scripts/fetch-python.sh)
+scripts/install-python-stdlib.sh   Xcode build phase: copies the stdlib and converts .so modules to frameworks
 ```
 
 DabCrypto is a separate Swift package because OpenSSL and BoringSSL (used by SwiftNIO SSH) declare
@@ -182,6 +206,7 @@ conflicting C structs; keeping OpenSSL behind an implementation-only import avoi
 
 [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) · [Citadel](https://github.com/orlandos-nl/Citadel)
 · [OpenSSL xcframework](https://github.com/krzyzanowskim/OpenSSL) · [CodeMirror 6](https://codemirror.net)
+· [WasmKit](https://github.com/swiftwasm/WasmKit) · [Python-Apple-support](https://github.com/beeware/Python-Apple-support)
 
 ## Roadmap
 
@@ -190,9 +215,9 @@ conflicting C structs; keeping OpenSSL behind an implementation-only import avoi
 - Mosh-style reconnect, tmux-aware session restore
 - `openssl` SKI/AKI extensions and `s_client -starttls`
 - iPad: split view terminal + editor, external keyboard shortcuts, Stage Manager multi-window
-- Python 3.13 via the official iOS build (python.org ships one; App Store allowed, +~30 MB)
-- A real Node is not feasible (needs JIT and fork); next steps are a WASI runtime for
-  clang-compiled tools (a-Shell style) and QuickJS for ES modules
+- `pip`-style installer for pure-Python wheels into `~/site-packages`
+- Ship a starter set of WASI tools (e.g. jq, ripgrep builds) as a pack
+- A real Node is not feasible on iOS (needs JIT and fork); QuickJS for ES modules is the next JS step
 
 ## License
 

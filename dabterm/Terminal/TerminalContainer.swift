@@ -17,7 +17,7 @@ struct TerminalContainer: UIViewRepresentable {
     }
 }
 
-final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink {
+final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIGestureRecognizerDelegate {
     private weak var session: ShellSession?
     private var started = false
     private var pending: [UInt8] = []
@@ -53,6 +53,63 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink {
 
     /// Called by the key bar to inject a key sequence.
     func inject(_ bytes: [UInt8]) { session?.feed(bytes: bytes) }
+
+    // MARK: Select mode (tap and drag to highlight; no long press needed)
+    private var selectPan: UIPanGestureRecognizer?
+    private var selectLongPress: UILongPressGestureRecognizer?
+    private var selectAnchor: CGPoint?
+    var selectMode = false
+
+    func setSelectMode(_ on: Bool) {
+        selectMode = on
+        if on {
+            if selectPan == nil {
+                let pan = UIPanGestureRecognizer(target: self, action: #selector(selectPanHandler(_:)))
+                pan.maximumNumberOfTouches = 1
+                pan.delegate = self
+                addGestureRecognizer(pan)
+                selectPan = pan
+            }
+            selectPan?.isEnabled = true
+            session?.write("\u{1b}[2m[select mode: drag to highlight, tap copy, sel again to leave]\u{1b}[0m\n")
+        } else {
+            selectPan?.isEnabled = false
+            dabSelectNone()
+        }
+    }
+
+    @objc private func selectPanHandler(_ g: UIPanGestureRecognizer) {
+        let p = g.location(in: self)
+        switch g.state {
+        case .began: selectAnchor = p; dabSelectionBegin(at: p)
+        case .changed: dabSelectionExtend(to: p)
+        case .ended, .cancelled:
+            if let a = selectAnchor, abs(a.y - p.y) < 2, abs(a.x - p.x) < 2 { dabSelectNone() }
+            selectAnchor = nil
+        default: break
+        }
+    }
+
+    /// Our select-mode pan must win over SwiftTerm's scroll/selection pans while active.
+    override func gestureRecognizerShouldBegin(_ g: UIGestureRecognizer) -> Bool {
+        if selectMode, let sp = selectPan, g !== sp, g is UIPanGestureRecognizer { return false }
+        return super.gestureRecognizerShouldBegin(g)
+    }
+    func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { false }
+
+    /// Copies the selection, or the current screen line under the cursor when nothing is selected.
+    func copySelectionOrLine() {
+        if let text = dabSelectedText, !text.isEmpty {
+            UIPasteboard.general.string = text
+            session?.write("\u{1b}[2m[copied \(text.count) chars]\u{1b}[0m\n")
+            dabSelectNone()
+            if let bar = inputAccessoryView as? KeyBar { bar.setSelectMode(false) }
+            selectMode = false; selectPan?.isEnabled = false
+        } else {
+            UIPasteboard.general.string = dabAllText.trimmingCharacters(in: .whitespacesAndNewlines)
+            session?.write("\u{1b}[2m[nothing selected: copied whole screen + scrollback]\u{1b}[0m\n")
+        }
+    }
 
     /// Soft-keyboard text while Ctrl/Alt is sticky becomes a control sequence.
     override func insertText(_ text: String) {

@@ -17,7 +17,9 @@
 		33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CC58D405C3F44BBBF6487A /* Workspace.swift */; };
 		3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472EA149190C7C58CC34DA91 /* SSHCommands.swift */; };
 		3AC303134C4DEC7FC81598C5 /* DabtermApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE69F9F038C664BCFDABF690 /* DabtermApp.swift */; };
+		4456AAF2606BC23E47BCAA60 /* PythonCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC494CE30036B47A790FFE /* PythonCommand.swift */; };
 		4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86DC88AD0561520B447A70E0 /* KeyBar.swift */; };
+		45ACA706C7B26499288B3CF7 /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; };
 		51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E6F1115C567E76CB92C59F /* ShellCommands.swift */; };
 		55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4327DCA24632381F84315B0E /* TextCommands.swift */; };
 		56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8806238848ABF3CC1EE8F885 /* DabCrypto */; };
@@ -25,6 +27,7 @@
 		79D400A8743762C71C830F2D /* EditorWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8373181A3E2F984A457A192 /* EditorWebView.swift */; };
 		7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */; };
 		80B0DAFA03490A83210537C8 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 9EE43C9E8D45C681F73DB8D3 /* Citadel */; };
+		8BF05C946A13D249B73ABC0A /* WasmCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 670EB508179ACB90359E6955 /* WasmCommand.swift */; };
 		915BC5BF58132AF177D18F89 /* EditorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B48B2FA74A39FD3D45151C /* EditorScreen.swift */; };
 		966380A5CA689BE0E8B630F9 /* ShellSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */; };
 		97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */; };
@@ -39,8 +42,25 @@
 		C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */; };
 		C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 559EB9869DE461F1461FAE24 /* SwiftTerm */; };
 		E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F26C2BA450A548A43F335D2 /* Tokenizer.swift */; };
+		F4ADA272455000A8EAB121DA /* WasmKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15CC4897512A44BBD2B81F57 /* WasmKit */; };
+		F4F8C2450CC59D84CCCDA294 /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FB2B1A4FC633BF8B1BF9BF55 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */; };
+		FBA02718E38457C7C424A857 /* WasmKitWASI in Frameworks */ = {isa = PBXBuildFile; productRef = 51E78EFB55D041610AD46C7C /* WasmKitWASI */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4FA406DF175DC6B33FA93BE8 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				F4F8C2450CC59D84CCCDA294 /* Python.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLCommand.swift; sourceTree = "<group>"; };
@@ -49,11 +69,13 @@
 		35B48B2FA74A39FD3D45151C /* EditorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorScreen.swift; sourceTree = "<group>"; };
 		38A6CCF8C69F84680140B1C6 /* HostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsView.swift; sourceTree = "<group>"; };
 		3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3EDC494CE30036B47A790FFE /* PythonCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonCommand.swift; sourceTree = "<group>"; };
 		4327DCA24632381F84315B0E /* TextCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextCommands.swift; sourceTree = "<group>"; };
 		472EA149190C7C58CC34DA91 /* SSHCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHCommands.swift; sourceTree = "<group>"; };
 		4C3AADBF7952DB71D2C6E6B8 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = dabterm/Resources/editor; sourceTree = SOURCE_ROOT; };
 		5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitCommands.swift; sourceTree = "<group>"; };
 		5A7063D11E3F50DDF3E9AAB5 /* DabCrypto */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DabCrypto; path = Packages/DabCrypto; sourceTree = SOURCE_ROOT; };
+		670EB508179ACB90359E6955 /* WasmCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WasmCommand.swift; sourceTree = "<group>"; };
 		6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSCommand.swift; sourceTree = "<group>"; };
 		6F26C2BA450A548A43F335D2 /* Tokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
 		86DC88AD0561520B447A70E0 /* KeyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBar.swift; sourceTree = "<group>"; };
@@ -64,6 +86,7 @@
 		A8373181A3E2F984A457A192 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
 		A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRegistry.swift; sourceTree = "<group>"; };
 		B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		B70A780258DB00B143678D60 /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = "Vendor/python-ios/Python.xcframework"; sourceTree = "<group>"; };
 		B9477A8E6F29B57D41C54708 /* GitRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRepo.swift; sourceTree = "<group>"; };
 		BE69F9F038C664BCFDABF690 /* DabtermApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DabtermApp.swift; sourceTree = "<group>"; };
 		C1CC58D405C3F44BBBF6487A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
@@ -72,6 +95,7 @@
 		D3B8A4CB47B7261E8ECB279C /* GitHubClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubClient.swift; sourceTree = "<group>"; };
 		D8F44612343221C54A754E77 /* ShellIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellIO.swift; sourceTree = "<group>"; };
 		DC099E58B81A9C70320B7641 /* ICMP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICMP.swift; sourceTree = "<group>"; };
+		E1DF6822DECB509B6CBEB78E /* SwiftTerm */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SwiftTerm; path = Packages/SwiftTerm; sourceTree = SOURCE_ROOT; };
 		EB85ECAE14996B8FC81438D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCommands.swift; sourceTree = "<group>"; };
 		F890EB280BF50646CCA56D58 /* dabterm.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = dabterm.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -86,6 +110,9 @@
 				C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */,
 				80B0DAFA03490A83210537C8 /* Citadel in Frameworks */,
 				56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */,
+				F4ADA272455000A8EAB121DA /* WasmKit in Frameworks */,
+				FBA02718E38457C7C424A857 /* WasmKitWASI in Frameworks */,
+				45ACA706C7B26499288B3CF7 /* Python.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +143,7 @@
 			children = (
 				71A6FC67BA1EC828A26E8608 /* dabterm */,
 				9788D4DDE75EE1B49B2BD969 /* Packages */,
+				A88CADA830203C8133AB4DBD /* Frameworks */,
 				ADEF290E56D8ABF2067B043D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -216,8 +244,17 @@
 			isa = PBXGroup;
 			children = (
 				5A7063D11E3F50DDF3E9AAB5 /* DabCrypto */,
+				E1DF6822DECB509B6CBEB78E /* SwiftTerm */,
 			);
 			path = Packages;
+			sourceTree = "<group>";
+		};
+		A88CADA830203C8133AB4DBD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B70A780258DB00B143678D60 /* Python.xcframework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		ADEF290E56D8ABF2067B043D /* Products */ = {
@@ -244,8 +281,10 @@
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
 				6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */,
 				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
+				3EDC494CE30036B47A790FFE /* PythonCommand.swift */,
 				C5E6F1115C567E76CB92C59F /* ShellCommands.swift */,
 				4327DCA24632381F84315B0E /* TextCommands.swift */,
+				670EB508179ACB90359E6955 /* WasmCommand.swift */,
 			);
 			path = Commands;
 			sourceTree = "<group>";
@@ -269,6 +308,8 @@
 				6B0E7C47A4C4AA3855F32043 /* Sources */,
 				A87483A106F53F0FD6474B0E /* Resources */,
 				D1303573229B8AED92D393B3 /* Frameworks */,
+				4FA406DF175DC6B33FA93BE8 /* Embed Frameworks */,
+				02E5DFED8E769048CAB7E18E /* Install Python standard library */,
 			);
 			buildRules = (
 			);
@@ -279,6 +320,8 @@
 				559EB9869DE461F1461FAE24 /* SwiftTerm */,
 				9EE43C9E8D45C681F73DB8D3 /* Citadel */,
 				8806238848ABF3CC1EE8F885 /* DabCrypto */,
+				15CC4897512A44BBD2B81F57 /* WasmKit */,
+				51E78EFB55D041610AD46C7C /* WasmKitWASI */,
 			);
 			productName = dabterm;
 			productReference = F890EB280BF50646CCA56D58 /* dabterm.app */;
@@ -310,8 +353,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B2B02482DAE768393371C2ED /* XCRemoteSwiftPackageReference "Citadel" */,
-				6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				FC6AE9D31ED098E3294ABECF /* XCRemoteSwiftPackageReference "WasmKit" */,
 				41B63D5F27F304B216FDB4FF /* XCLocalSwiftPackageReference "Packages/DabCrypto" */,
+				15561C3CC4A6342265FDC20A /* XCLocalSwiftPackageReference "Packages/SwiftTerm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ADEF290E56D8ABF2067B043D /* Products */;
@@ -335,6 +379,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		02E5DFED8E769048CAB7E18E /* Install Python standard library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Install Python standard library";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/sh\n# Xcode build phase: copy the Python standard library into the app and convert its binary\n# modules into signed frameworks (iOS requires that). Uses BeeWare's helper from the package.\nset -eu\nXC=\"Vendor/python-ios/Python.xcframework\"\nif [ ! -d \"$PROJECT_DIR/$XC\" ]; then\n  echo \"warning: $XC not found; Python is not bundled (run scripts/fetch-python.sh)\"\n  exit 0\nfi\nsource \"$PROJECT_DIR/$XC/build/utils.sh\"\ninstall_python \"$XC\"\n# Trim what we never need on a phone (tests, tkinter, idle): ~8 MB\nPYLIB=\"$CODESIGNING_FOLDER_PATH/python/lib/python3.13\"\nrm -rf \"$PYLIB/test\" \"$PYLIB/idlelib\" \"$PYLIB/tkinter\" \"$PYLIB/turtledemo\" \"$PYLIB/ensurepip\" 2>/dev/null || true\nfind \"$CODESIGNING_FOLDER_PATH/python\" -name \"__pycache__\" -type d -prune -exec rm -rf {} + 2>/dev/null || true\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		6B0E7C47A4C4AA3855F32043 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -356,6 +421,7 @@
 				97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */,
 				7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */,
 				039E7C40978B03E85D093010 /* OpenSSLCommand.swift in Sources */,
+				4456AAF2606BC23E47BCAA60 /* PythonCommand.swift in Sources */,
 				3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */,
 				2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */,
 				C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */,
@@ -367,6 +433,7 @@
 				55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */,
 				E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */,
 				9D96A52237C750B61F90A21E /* ToolPacks.swift in Sources */,
+				8BF05C946A13D249B73ABC0A /* WasmCommand.swift in Sources */,
 				33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -428,7 +495,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -448,8 +515,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor/python-ios\"",
+				);
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator";
 				INFOPLIST_FILE = dabterm/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -510,7 +583,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 0.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -529,8 +602,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"Vendor/python-ios\"",
+				);
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator";
 				INFOPLIST_FILE = dabterm/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -567,6 +646,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		15561C3CC4A6342265FDC20A /* XCLocalSwiftPackageReference "Packages/SwiftTerm" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SwiftTerm;
+		};
 		41B63D5F27F304B216FDB4FF /* XCLocalSwiftPackageReference "Packages/DabCrypto" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/DabCrypto;
@@ -574,14 +657,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.99.0;
-			};
-		};
 		B2B02482DAE768393371C2ED /* XCRemoteSwiftPackageReference "Citadel" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/orlandos-nl/Citadel";
@@ -590,12 +665,29 @@
 				minimumVersion = 0.9.0;
 			};
 		};
+		FC6AE9D31ED098E3294ABECF /* XCRemoteSwiftPackageReference "WasmKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftwasm/WasmKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		15CC4897512A44BBD2B81F57 /* WasmKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC6AE9D31ED098E3294ABECF /* XCRemoteSwiftPackageReference "WasmKit" */;
+			productName = WasmKit;
+		};
+		51E78EFB55D041610AD46C7C /* WasmKitWASI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC6AE9D31ED098E3294ABECF /* XCRemoteSwiftPackageReference "WasmKit" */;
+			productName = WasmKitWASI;
+		};
 		559EB9869DE461F1461FAE24 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = SwiftTerm;
 		};
 		8806238848ABF3CC1EE8F885 /* DabCrypto */ = {

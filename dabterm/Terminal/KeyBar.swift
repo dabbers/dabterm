@@ -3,22 +3,29 @@ import UIKit
 /// Keys the iOS keyboard lacks: Esc, Tab, Ctrl (sticky), Alt (sticky), arrows, and common
 /// shell symbols. Works for the terminal (byte injection) and the editor (JS bridge).
 final class KeyBar: UIInputView {
-    enum Key { case esc, tab, ctrl, alt, up, down, left, right, home, end, text(String), paste, hideKeyboard }
+    enum Key { case esc, tab, ctrl, alt, up, down, left, right, home, end, text(String), paste, hideKeyboard, select, copy, cut, selectAll }
     private var ctrlOn = false, altOn = false
-    private var ctrlButton: UIButton?, altButton: UIButton?
+    private var ctrlButton: UIButton?, altButton: UIButton?, selectButton: UIButton?
+    /// Selection mode: drag selects text instead of scrolling; arrows extend the selection.
+    private(set) var selectOn = false
+    var onSelectModeChanged: ((Bool) -> Void)?
+    /// Whether to show a cut key (editor only).
+    var showsCut = false
     private let handler: (Key) -> Void
     weak var terminal: DabTerminalView?
 
     convenience init(target: DabTerminalView) {
-        self.init(frame: CGRect(x: 0, y: 0, width: 320, height: UIDevice.current.userInterfaceIdiom == .phone ? 40 : 46)) { _ in }
+        self.init(frame: CGRect(x: 0, y: 0, width: 320, height: UIDevice.current.userInterfaceIdiom == .phone ? 40 : 46), showsCut: false) { _ in }
         terminal = target
         handlerBox.fn = { [weak self] k in self?.sendToTerminal(k) }
+        onSelectModeChanged = { [weak target] on in target?.setSelectMode(on) }
     }
     private final class Box { var fn: (Key) -> Void = { _ in } }
     private let handlerBox = Box()
 
-    init(frame: CGRect, handler: @escaping (Key) -> Void) {
+    init(frame: CGRect, handler: @escaping (Key) -> Void, showsCut: Bool = false) {
         self.handler = handler
+        self.showsCut = showsCut
         super.init(frame: frame, inputViewStyle: .keyboard)
         handlerBox.fn = handler
         autoresizingMask = .flexibleHeight
@@ -43,15 +50,17 @@ final class KeyBar: UIInputView {
             stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -4),
             stack.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor, constant: -8),
         ])
-        let items: [(String, Key, Bool)] = [
+        var items: [(String, Key, Bool)] = [
+            ("sel", .select, true), ("copy", .copy, false)] + (showsCut ? [("cut", .cut, false)] : []) + [("paste", .paste, false),
             ("esc", .esc, false), ("tab", .tab, false), ("ctrl", .ctrl, true), ("alt", .alt, true),
             ("←", .left, false), ("↓", .down, false), ("↑", .up, false), ("→", .right, false),
             ("-", .text("-"), false), ("/", .text("/"), false), ("|", .text("|"), false), ("~", .text("~"), false),
             ("`", .text("`"), false), ("\\", .text("\\"), false), ("'", .text("'"), false), ("\"", .text("\""), false),
             ("{", .text("{"), false), ("}", .text("}"), false), ("[", .text("["), false), ("]", .text("]"), false),
             ("<", .text("<"), false), (">", .text(">"), false), ("$", .text("$"), false), ("&", .text("&"), false),
-            ("home", .home, false), ("end", .end, false), ("paste", .paste, false), ("⌨︎", .hideKeyboard, false),
+            ("home", .home, false), ("end", .end, false), ("all", .selectAll, false), ("⌨︎", .hideKeyboard, false),
         ]
+        items = items.filter { _ in true }
         for (title, key, sticky) in items {
             let b = UIButton(type: .system)
             var cfg = UIButton.Configuration.gray()
@@ -63,7 +72,7 @@ final class KeyBar: UIInputView {
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { var a = $0; a.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium); return a }
             b.configuration = cfg
             b.addAction(UIAction { [weak self] _ in self?.tapped(key, button: b) }, for: .touchUpInside)
-            if sticky { if case .ctrl = key { ctrlButton = b } else { altButton = b } }
+            if sticky { switch key { case .ctrl: ctrlButton = b; case .alt: altButton = b; case .select: selectButton = b; default: break } }
             // arrows repeat on long press
             if case .left = key { addRepeat(b, key) }; if case .right = key { addRepeat(b, key) }
             if case .up = key { addRepeat(b, key) }; if case .down = key { addRepeat(b, key) }
@@ -93,6 +102,7 @@ final class KeyBar: UIInputView {
         switch key {
         case .ctrl: ctrlOn.toggle(); style(button, on: ctrlOn); return
         case .alt: altOn.toggle(); style(button, on: altOn); return
+        case .select: selectOn.toggle(); style(button, on: selectOn); onSelectModeChanged?(selectOn); return
         default: break
         }
         handlerBox.fn(key)
@@ -101,6 +111,7 @@ final class KeyBar: UIInputView {
         b.configuration?.baseBackgroundColor = on ? .systemCyan : UIColor(white: 0.22, alpha: 1)
         b.configuration?.baseForegroundColor = on ? .black : .white
     }
+    func setSelectMode(_ on: Bool) { selectOn = on; if let b = selectButton { style(b, on: on) } }
     private func consumeModifiers() -> (ctrl: Bool, alt: Bool) {
         let r = (ctrlOn, altOn)
         if ctrlOn, let b = ctrlButton { ctrlOn = false; style(b, on: false) }
@@ -120,6 +131,10 @@ final class KeyBar: UIInputView {
         case .home: t.inject(Array("\u{1b}[H".utf8)); case .end: t.inject(Array("\u{1b}[F".utf8))
         case .paste: if let s = UIPasteboard.general.string { t.inject(Array(s.utf8)) }
         case .hideKeyboard: t.resignFirstResponder()
+        case .copy: t.copySelectionOrLine()
+        case .cut: t.copySelectionOrLine()
+        case .selectAll: t.selectAll(nil); setSelectMode(true); onSelectModeChanged?(true)
+        case .select: break
         case .text(let s):
             var bytes = Array(s.utf8)
             if mods.ctrl, let c = s.uppercased().utf8.first, c >= 0x40, c <= 0x5f { bytes = [c - 0x40] }

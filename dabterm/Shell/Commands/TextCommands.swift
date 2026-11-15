@@ -28,9 +28,10 @@ struct EchoCommand: Command {
 }
 
 struct GrepCommand: Command {
-    let name = "grep"; let usage = "grep [-inrvcE] pattern [file...]"; let summary = "search text with regex"
+    let name = "grep"; let usage = "grep [-inrvcEF] [-A n] [-B n] [-C n] pattern [file...]"; let summary = "search text with regex"
     func run(_ ctx: CommandContext) async throws -> Int32 {
-        let (flags, pos) = ctx.parse()
+        let (flags, pos) = ctx.parse(flagsWithValues: ["A", "B", "C"])
+        let after = Int(flags["A"] ?? flags["C"] ?? "0") ?? 0, before = Int(flags["B"] ?? flags["C"] ?? "0") ?? 0
         guard let pattern = pos.first else { throw CommandError("usage: \(usage)") }
         var opts: NSRegularExpression.Options = []
         if flags["i"] != nil { opts.insert(.caseInsensitive) }
@@ -53,24 +54,36 @@ struct GrepCommand: Command {
         let showName = files.count > 1
         var any = false
         if files.isEmpty {
-            let r = scan(ctx.stdin ?? "", re: re, invert: invert, numbers: numbers, countOnly: countOnly, name: nil, ctx: ctx); any = any || r
+            let r = scan(ctx.stdin ?? "", re: re, invert: invert, numbers: numbers, countOnly: countOnly, name: nil, ctx: ctx, after: after, before: before); any = any || r
         }
         for f in files {
             if Task.isCancelled { return 130 }
             guard let d = FileManager.default.contents(atPath: ctx.path(f).path), let text = String(data: d, encoding: .utf8) else { continue }
-            let r = scan(text, re: re, invert: invert, numbers: numbers, countOnly: countOnly, name: showName ? f : nil, ctx: ctx); any = any || r
+            let r = scan(text, re: re, invert: invert, numbers: numbers, countOnly: countOnly, name: showName ? f : nil, ctx: ctx, after: after, before: before); any = any || r
         }
         return any ? 0 : 1
     }
-    private func scan(_ text: String, re: NSRegularExpression, invert: Bool, numbers: Bool, countOnly: Bool, name: String?, ctx: CommandContext) -> Bool {
+    private func scan(_ text: String, re: NSRegularExpression, invert: Bool, numbers: Bool, countOnly: Bool, name: String?, ctx: CommandContext, after: Int = 0, before: Int = 0) -> Bool {
         var count = 0
-        for (i, line) in lines(text).enumerated() {
+        let all = lines(text)
+        var printed = Set<Int>()
+        var lastPrinted = -1
+        func emitContext(_ idx: Int) {
+            guard !printed.contains(idx), idx >= 0, idx < all.count else { return }
+            if lastPrinted >= 0 && idx > lastPrinted + 1 && (after > 0 || before > 0) { ctx.print("--") }
+            printed.insert(idx); lastPrinted = idx
+            ctx.print((name.map { "\u{1b}[35m\($0)\u{1b}[36m-\u{1b}[0m" } ?? "") + (numbers ? "\u{1b}[32m\(idx + 1)\u{1b}[36m-\u{1b}[0m" : "") + all[idx])
+        }
+        for (i, line) in all.enumerated() {
             let range = NSRange(line.startIndex..., in: line)
             let matches = re.matches(in: line, range: range)
             let hit = !matches.isEmpty
             if hit != invert {
                 count += 1
                 if countOnly { continue }
+                if before > 0 { for j in max(0, i - before)..<i { emitContext(j) } }
+                if lastPrinted >= 0 && i > lastPrinted + 1 && (after > 0 || before > 0) { ctx.print("--") }
+                printed.insert(i); lastPrinted = i
                 var shown = line
                 if !invert {
                     var result = ""; var last = line.startIndex
@@ -79,6 +92,7 @@ struct GrepCommand: Command {
                 }
                 let prefix = (name.map { "\u{1b}[35m\($0)\u{1b}[36m:\u{1b}[0m" } ?? "") + (numbers ? "\u{1b}[32m\(i + 1)\u{1b}[36m:\u{1b}[0m" : "")
                 ctx.print(prefix + shown)
+                if after > 0 { for j in (i + 1)...min(all.count - 1, i + after) where j < all.count { emitContext(j) } }
             }
         }
         if countOnly { ctx.print((name.map { "\($0):" } ?? "") + "\(count)") }

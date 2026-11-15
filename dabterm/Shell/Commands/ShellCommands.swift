@@ -15,7 +15,7 @@ struct HelpCommand: Command {
             ("Network", ["ping", "traceroute", "dig", "host", "curl", "wget", "http", "nc", "portscan", "ifconfig", "whois"]),
             ("Crypto", ["openssl", "shasum", "md5", "uuid", "ssh-keygen"]),
             ("Remote", ["ssh", "scp", "ssh-copy-id", "git", "gh"]),
-            ("Scripting", ["js", "node", "sh"]),
+            ("Scripting", ["js", "node", "python", "wasm", "sh"]),
             ("Shell", ["help", "clear", "history", "env", "export", "unset", "alias", "which", "date", "uname", "sleep", "sh", "exit"]),
         ]
         ctx.print("\u{1b}[1mdabterm built-in commands\u{1b}[0m  (help <cmd> for usage; .sh files in ~/bin run by name)\n")

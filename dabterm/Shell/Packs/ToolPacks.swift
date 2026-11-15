@@ -55,8 +55,12 @@ struct PackCommand: Command {
             return try await JSCommand().run(await ctx.derived(name: cmd.name, args: [entry.path] + ctx.args))
         case "sh":
             return await ctx.session.runScript(entry, args: ctx.args)
+        case "wasm":
+            return try await WasmRunner.run(file: entry, args: ctx.args, preopens: [], ctx: ctx)
+        case "python", "py":
+            return try await PythonCommand().run(await ctx.derived(name: cmd.name, args: [entry.path] + ctx.args))
         default:
-            throw CommandError("pack \(pack.manifest.name): unsupported command kind '\(cmd.kind)' (js, sh)")
+            throw CommandError("pack \(pack.manifest.name): unsupported command kind '\(cmd.kind)' (js, sh, wasm, python)")
         }
     }
 }

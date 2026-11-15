@@ -1,6 +1,6 @@
 // dabterm editor: CodeMirror 6 bundle. Built with `npm run build` into Resources/editor/editor.js.
 // The native side talks to window.dabterm.* and receives messages via webkit.messageHandlers.editor.
-import { EditorState, Compartment } from "@codemirror/state";
+import { EditorState, Compartment, EditorSelection } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
          drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightSpecialChars } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, selectAll } from "@codemirror/commands";
@@ -115,6 +115,43 @@ const view = new EditorView({ state: makeState("", null), parent: document.getEl
 
 const keyMap = { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp", down: "ArrowDown", home: "Home", end: "End", esc: "Escape" };
 
+// ---- Select mode: touch-drag selects text instead of scrolling; arrows extend the selection.
+let selectMode = false;
+let dragAnchor = null;
+const scroller = view.scrollDOM;
+function posAt(t) { const p = view.posAtCoords({ x: t.clientX, y: t.clientY }); return p == null ? null : p; }
+scroller.addEventListener("touchstart", e => {
+  if (!selectMode || e.touches.length !== 1) return;
+  const pos = posAt(e.touches[0]);
+  if (pos == null) return;
+  dragAnchor = pos;
+  view.dispatch({ selection: EditorSelection.single(pos) });
+  e.preventDefault();
+}, { passive: false });
+scroller.addEventListener("touchmove", e => {
+  if (!selectMode || dragAnchor == null) return;
+  const pos = posAt(e.touches[0]);
+  if (pos != null) view.dispatch({ selection: EditorSelection.single(dragAnchor, pos), scrollIntoView: true });
+  e.preventDefault();
+}, { passive: false });
+scroller.addEventListener("touchend", () => { dragAnchor = null; });
+function extend(dir) {
+  const sel = view.state.selection.main;
+  const line = view.state.doc.lineAt(sel.head);
+  let head = sel.head;
+  if (dir === "left") head = Math.max(0, head - 1);
+  else if (dir === "right") head = Math.min(view.state.doc.length, head + 1);
+  else if (dir === "home") head = line.from;
+  else if (dir === "end") head = line.to;
+  else if (dir === "up" || dir === "down") {
+    const n = line.number + (dir === "up" ? -1 : 1);
+    if (n < 1 || n > view.state.doc.lines) return;
+    const target = view.state.doc.line(n);
+    head = Math.min(target.to, target.from + (head - line.from));
+  }
+  view.dispatch({ selection: EditorSelection.single(sel.anchor, head), scrollIntoView: true });
+}
+
 window.dabterm = {
   open(path, content) {
     currentPath = path; dirty = false;
@@ -131,7 +168,13 @@ window.dabterm = {
   selectAll() { selectAll(view); view.focus(); },
   find() { openSearchPanel(view); },
   insert(text) { view.dispatch(view.state.replaceSelection(text)); view.focus(); },
+  setSelectMode(on) { selectMode = on; dragAnchor = null; scroller.style.touchAction = on ? "none" : ""; if (!on) { const h = view.state.selection.main.head; view.dispatch({ selection: EditorSelection.single(h) }); } },
+  selectedText() { const s = view.state.selection.main; return view.state.sliceDoc(s.from, s.to); },
+  copy() { const t = window.dabterm.selectedText(); if (t) post({ type: "clipboard", text: t }); return t.length; },
+  cut() { const s = view.state.selection.main; const t = view.state.sliceDoc(s.from, s.to); if (t) { post({ type: "clipboard", text: t }); view.dispatch({ changes: { from: s.from, to: s.to, insert: "" } }); } return t.length; },
+  selectLine() { const s = view.state.selection.main; const a = view.state.doc.lineAt(s.from), b = view.state.doc.lineAt(s.to); const to = b.number < view.state.doc.lines ? view.state.doc.line(b.number + 1).from : b.to; view.dispatch({ selection: EditorSelection.single(a.from, to) }); },
   key(name) {
+    if (selectMode && ["left", "right", "up", "down", "home", "end"].includes(name)) { extend(name); return; }
     if (name === "tab") { indentWithTab.run(view); view.focus(); return; }
     view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", { key: keyMap[name] || name, bubbles: true }));
     view.focus();
