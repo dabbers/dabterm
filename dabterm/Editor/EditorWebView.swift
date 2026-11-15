@@ -100,6 +100,7 @@ struct EditorWebView: UIViewRepresentable {
 /// (the standard trick) so our KeyBar appears above the keyboard while editing.
 enum EditorKeyBarInstaller {
     static var bars: [ObjectIdentifier: KeyBar] = [:]
+    static var dragHandlers: [ObjectIdentifier: SelectDragHandler] = [:]
     static func install(on wv: WKWebView, controller: EditorController) {
         guard let target = wv.scrollView.subviews.first(where: { String(describing: type(of: $0)).hasPrefix("WKContent") }) else { return }
         let bar = KeyBar(frame: CGRect(x: 0, y: 0, width: 320, height: UIDevice.current.userInterfaceIdiom == .phone ? 40 : 46), handler: { key in
@@ -120,7 +121,15 @@ enum EditorKeyBarInstaller {
                 }
             }
         }, showsCut: true)
-        bar.onSelectModeChanged = { (on: Bool) in Task { @MainActor in controller.webView.evaluateJavaScript("dabterm.setSelectMode(\(on))") { _, _ in } } }
+        let drag = SelectDragHandler(webView: wv, controller: controller)
+        dragHandlers[ObjectIdentifier(wv)] = drag
+        bar.onSelectModeChanged = { (on: Bool) in
+            Task { @MainActor in
+                controller.webView.evaluateJavaScript("dabterm.setSelectMode(\(on))") { _, _ in }
+                drag.setEnabled(on)
+                controller.status = on ? "Select mode: drag to highlight, arrows extend, then copy or cut" : ""
+            }
+        }
         bars[ObjectIdentifier(wv)] = bar
         let newClassName = "DabWKContentWithBar_\(String(describing: type(of: target)))"
         if let cls = NSClassFromString(newClassName) { object_setClass(target, cls); return }
@@ -135,4 +144,31 @@ enum EditorKeyBarInstaller {
         objc_registerClassPair(newClass)
         object_setClass(target, newClass)
     }
+}
+
+/// Select mode for the editor: a native pan that outranks WebKit's own touch handling and
+/// drives CodeMirror's selection through `dabterm.dragSelect`. A plain tap still places the caret.
+final class SelectDragHandler: NSObject, UIGestureRecognizerDelegate {
+    private weak var webView: WKWebView?
+    private weak var controller: EditorController?
+    private let pan = UIPanGestureRecognizer()
+    init(webView: WKWebView, controller: EditorController) {
+        self.webView = webView; self.controller = controller
+        super.init()
+        pan.addTarget(self, action: #selector(handle(_:)))
+        pan.maximumNumberOfTouches = 1
+        pan.delegate = self
+        pan.isEnabled = false
+        webView.addGestureRecognizer(pan)
+    }
+    func setEnabled(_ on: Bool) { pan.isEnabled = on }
+    @objc private func handle(_ g: UIPanGestureRecognizer) {
+        guard let wv = webView else { return }
+        let p = g.location(in: wv)
+        let phase: String
+        switch g.state { case .began: phase = "start"; case .changed: phase = "move"; default: phase = "end" }
+        wv.evaluateJavaScript("dabterm.dragSelect('\(phase)', \(p.x), \(p.y))") { _, _ in }
+    }
+    func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { false }
+    func gestureRecognizer(_ g: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool { true }
 }

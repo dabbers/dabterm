@@ -119,22 +119,15 @@ const keyMap = { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp", down: "A
 let selectMode = false;
 let dragAnchor = null;
 const scroller = view.scrollDOM;
-function posAt(t) { const p = view.posAtCoords({ x: t.clientX, y: t.clientY }); return p == null ? null : p; }
-scroller.addEventListener("touchstart", e => {
-  if (!selectMode || e.touches.length !== 1) return;
-  const pos = posAt(e.touches[0]);
+function posAt(x, y) { const p = view.posAtCoords({ x, y }); return p == null ? null : p; }
+// Driven by the native pan recognizer (coordinates are WKWebView points == CSS px).
+function dragSelect(phase, x, y) {
+  const pos = posAt(x, y);
   if (pos == null) return;
-  dragAnchor = pos;
-  view.dispatch({ selection: EditorSelection.single(pos) });
-  e.preventDefault();
-}, { passive: false });
-scroller.addEventListener("touchmove", e => {
-  if (!selectMode || dragAnchor == null) return;
-  const pos = posAt(e.touches[0]);
-  if (pos != null) view.dispatch({ selection: EditorSelection.single(dragAnchor, pos), scrollIntoView: true });
-  e.preventDefault();
-}, { passive: false });
-scroller.addEventListener("touchend", () => { dragAnchor = null; });
+  if (phase === "start") { dragAnchor = pos; view.dispatch({ selection: EditorSelection.single(pos) }); }
+  else if (phase === "move" && dragAnchor != null) { view.dispatch({ selection: EditorSelection.single(dragAnchor, pos), scrollIntoView: true }); }
+  else if (phase === "end") { dragAnchor = null; }
+}
 function extend(dir) {
   const sel = view.state.selection.main;
   const line = view.state.doc.lineAt(sel.head);
@@ -168,7 +161,8 @@ window.dabterm = {
   selectAll() { selectAll(view); view.focus(); },
   find() { openSearchPanel(view); },
   insert(text) { view.dispatch(view.state.replaceSelection(text)); view.focus(); },
-  setSelectMode(on) { selectMode = on; dragAnchor = null; scroller.style.touchAction = on ? "none" : ""; if (!on) { const h = view.state.selection.main.head; view.dispatch({ selection: EditorSelection.single(h) }); } },
+  setSelectMode(on) { selectMode = on; dragAnchor = null; if (!on) { const h = view.state.selection.main.head; view.dispatch({ selection: EditorSelection.single(h) }); } },
+  dragSelect,
   selectedText() { const s = view.state.selection.main; return view.state.sliceDoc(s.from, s.to); },
   copy() { const t = window.dabterm.selectedText(); if (t) post({ type: "clipboard", text: t }); return t.length; },
   cut() { const s = view.state.selection.main; const t = view.state.sliceDoc(s.from, s.to); if (t) { post({ type: "clipboard", text: t }); view.dispatch({ changes: { from: s.from, to: s.to, insert: "" } }); } return t.length; },

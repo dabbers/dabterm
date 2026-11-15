@@ -71,7 +71,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
                 selectPan = pan
             }
             selectPan?.isEnabled = true
-            session?.write("\u{1b}[2m[select mode: drag to highlight, tap copy, sel again to leave]\u{1b}[0m\n")
+            showToast("Select mode: drag to highlight, then tap copy")
         } else {
             selectPan?.isEnabled = false
             dabSelectNone()
@@ -97,17 +97,35 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
     }
     func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { false }
 
-    /// Copies the selection, or the current screen line under the cursor when nothing is selected.
+    /// Brief overlay message that doesn't touch the terminal stream.
+    private var toast: UILabel?
+    func showToast(_ text: String) {
+        toast?.removeFromSuperview()
+        let l = UILabel()
+        l.text = "  \(text)  "
+        l.font = .systemFont(ofSize: 13, weight: .medium)
+        l.textColor = .black
+        l.backgroundColor = UIColor.systemCyan.withAlphaComponent(0.95)
+        l.layer.cornerRadius = 8; l.clipsToBounds = true
+        l.numberOfLines = 2; l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(l)
+        NSLayoutConstraint.activate([l.centerXAnchor.constraint(equalTo: centerXAnchor), l.topAnchor.constraint(equalTo: topAnchor, constant: 8), l.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, constant: -24), l.heightAnchor.constraint(greaterThanOrEqualToConstant: 30)])
+        toast = l
+        UIView.animate(withDuration: 0.25, delay: 1.8, options: []) { l.alpha = 0 } completion: { _ in if self.toast === l { l.removeFromSuperview(); self.toast = nil } }
+    }
+
+    /// Copies the selection, or the whole buffer when nothing is selected.
     func copySelectionOrLine() {
         if let text = dabSelectedText, !text.isEmpty {
             UIPasteboard.general.string = text
-            session?.write("\u{1b}[2m[copied \(text.count) chars]\u{1b}[0m\n")
+            showToast("Copied \(text.count) characters")
             dabSelectNone()
             if let bar = inputAccessoryView as? KeyBar { bar.setSelectMode(false) }
             selectMode = false; selectPan?.isEnabled = false
         } else {
             UIPasteboard.general.string = dabAllText.trimmingCharacters(in: .whitespacesAndNewlines)
-            session?.write("\u{1b}[2m[nothing selected: copied whole screen + scrollback]\u{1b}[0m\n")
+            showToast("Nothing selected: copied the whole screen and scrollback")
         }
     }
 

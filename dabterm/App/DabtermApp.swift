@@ -102,8 +102,26 @@ final class AppModel: ObservableObject {
     }
 }
 
+/// With a hardware keyboard attached iOS docks the key bar at the screen bottom without a
+/// keyboard; SwiftUI does not inset for that, so the tab bar would sit under it. Track it.
+@MainActor
+final class KeyboardInset: ObservableObject {
+    @Published var bottom: CGFloat = 0
+    init() {
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
+            guard let self, let frame = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
+                  let screen = (n.object as? UIScreen) ?? UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.screen }).first else { return }
+            let visible = max(0, screen.bounds.height - frame.minY)
+            // Only the accessory bar (< 120pt) needs our help; a full keyboard is handled by SwiftUI.
+            self.bottom = visible > 0 && visible < 120 ? visible : 0
+        }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
+    }
+}
+
 struct RootView: View {
     @EnvironmentObject var model: AppModel
+    @StateObject private var keyboardInset = KeyboardInset()
     var body: some View {
         TabView(selection: $model.tab) {
             TerminalTabView().tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
@@ -112,6 +130,7 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
+        .padding(.bottom, keyboardInset.bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.
