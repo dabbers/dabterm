@@ -23,6 +23,11 @@ struct HelpCommand: Command {
             ctx.print("\u{1b}[1;36m\(title)\u{1b}[0m")
             for n in names { if let c = CommandRegistry.shared.command(named: n) { ctx.print("  \u{1b}[1m\(n.padding(toLength: 12, withPad: " ", startingAt: 0))\u{1b}[0m \(c.summary)") } }
         }
+        let packCmds = await ToolPackManager.shared.commands.values.sorted { $0.name < $1.name }
+        if !packCmds.isEmpty {
+            ctx.print("\u{1b}[1;36mPacks\u{1b}[0m  (pack list · pack install owner/repo)")
+            for c in packCmds { ctx.print("  \u{1b}[1m\(c.name.padding(toLength: 12, withPad: " ", startingAt: 0))\u{1b}[0m \(c.summary)") }
+        }
         ctx.print("\nKeys: Ctrl-C cancel · Ctrl-L clear · Tab complete · ↑/↓ history · Ctrl-A/E line start/end · Ctrl-U/K/W kill")
         return 0
     }

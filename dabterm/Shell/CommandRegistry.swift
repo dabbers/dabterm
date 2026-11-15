@@ -3,8 +3,11 @@ import Foundation
 final class CommandRegistry {
     static let shared = CommandRegistry()
     private var commands: [String: Command] = [:]
-    var names: [String] { commands.keys.sorted() }
-    var all: [Command] { names.compactMap { commands[$0] } }
+    /// Commands contributed by tool packs (see ToolPackManager); refreshed by `pack reload`.
+    @MainActor var packCommands: [String: Command] { ToolPackManager.shared.commands }
+    var names: [String] { Array(Set(commands.keys).union(MainActor.assumeIsolated { packCommands.keys })).sorted() }
+    var all: [Command] { names.compactMap { command(named: $0) } }
+    func isBuiltin(_ name: String) -> Bool { commands[name] != nil }
 
     private init() {
         let list: [Command] = [
@@ -26,7 +29,7 @@ final class CommandRegistry {
             // ssh
             SSHCommand(), SSHKeygenCommand(), ScpCommand(), SSHCopyIdCommand(),
             // git
-            GitCommand(), GhCommand(),
+            GitCommand(), GhCommand(), PackCLICommand(),
         ]
         for c in list { commands[c.name] = c }
         commands["ll"] = AliasedCommand(name: "ll", target: "ls", prefix: ["-la"])
@@ -41,7 +44,7 @@ final class CommandRegistry {
         commands["node"] = AliasedCommand(name: "node", target: "js", prefix: [])
     }
 
-    func command(named name: String) -> Command? { commands[name] }
+    func command(named name: String) -> Command? { commands[name] ?? MainActor.assumeIsolated { packCommands[name] } }
     func register(_ c: Command) { commands[c.name] = c }
 }
 

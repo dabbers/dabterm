@@ -1,0 +1,14 @@
+{
+  "name": "core-tools",
+  "version": "1.0.0",
+  "description": "Small everyday tools written in JavaScript. Edit them in place or update with `pack update core-tools`.",
+  "source": "dabbers/dabterm/dabterm/Resources/packs/core-tools",
+  "commands": [
+    { "name": "jsonfmt",   "kind": "js", "entry": "jsonfmt.js",   "summary": "pretty-print, minify or sort JSON",      "usage": "jsonfmt [-c] [-s] [file]" },
+    { "name": "urlencode", "kind": "js", "entry": "url.js",       "summary": "percent-encode text or stdin",          "usage": "urlencode [text]" },
+    { "name": "urldecode", "kind": "js", "entry": "url.js",       "summary": "decode percent-encoded text",           "usage": "urldecode [text]" },
+    { "name": "ts",        "kind": "js", "entry": "ts.js",        "summary": "convert unix timestamps and ISO dates", "usage": "ts [now|<epoch>|<iso>]" },
+    { "name": "calc",      "kind": "js", "entry": "calc.js",      "summary": "evaluate an arithmetic expression",     "usage": "calc <expr>" },
+    { "name": "hr",        "kind": "sh", "entry": "hr.sh",        "summary": "print a horizontal rule",               "usage": "hr [char]" }
+  ]
+}

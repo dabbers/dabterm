@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct DabtermApp: App {
@@ -27,6 +28,7 @@ final class AppModel: ObservableObject {
     enum Tab: Hashable { case terminal, editor, hosts, settings }
 
     init() {
+        ToolPackManager.shared.reload()
         newSession()
         SmokeTest.runIfRequested(model: self)
     }
@@ -111,6 +113,12 @@ struct RootView: View {
         }
         .tint(.cyan)
         .onOpenURL { url in model.handleIncoming(url) }
+        .onChange(of: model.tab) { _, tab in
+            // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.
+            if tab == .terminal { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { model.activeSession?.focusTerminal?() } }
+            else { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+        }
+        .onChange(of: model.activeSession) { _, s in if model.tab == .terminal { s?.focusTerminal?() } }
     }
 }
 

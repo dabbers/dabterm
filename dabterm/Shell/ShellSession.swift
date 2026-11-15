@@ -28,6 +28,8 @@ final class ShellSession: ObservableObject {
     let registry = CommandRegistry.shared
     /// Requests to the UI (open editor, etc.)
     var openInEditor: ((URL, Int?) -> Void)?
+    /// Set by the terminal view: makes the terminal first responder (keyboard focus).
+    var focusTerminal: (() -> Void)?
 
     static let historyURL = Workspace.root.appendingPathComponent(".dsh_history")
 

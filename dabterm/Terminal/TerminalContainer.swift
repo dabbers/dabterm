@@ -25,6 +25,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink {
     func bind(_ s: ShellSession) {
         session = s
         s.terminal = self
+        s.focusTerminal = { [weak self] in _ = self?.becomeFirstResponder() }
         terminalDelegate = self
         nativeBackgroundColor = .black
         nativeForegroundColor = UIColor(white: 0.9, alpha: 1)

@@ -32,7 +32,11 @@ targets:
         excludes:
           - "Editor/web/**"
           - "Resources/editor/**"
+          - "Resources/packs/**"
       - path: dabterm/Resources/editor
+        type: folder
+        buildPhase: resources
+      - path: dabterm/Resources/packs
         type: folder
         buildPhase: resources
     settings:

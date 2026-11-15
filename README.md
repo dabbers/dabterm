@@ -63,6 +63,45 @@ arrows (long-press to repeat), Home/End, `- / | ~ \` ' " { } [ ] < > $ &`, paste
 existing folder. `gh auth login` (device flow or paste a token), `gh repo list|create|view`,
 `gh pr list|create`, `gh issue list`. Tokens go in the Keychain, never in the Files folder.
 
+## Tool packs (update tools without an app update)
+
+Commands can live outside the binary as **packs**: a folder with a `pack.json` plus JavaScript
+(run on JavaScriptCore) or dsh scripts. The App Store permits JavaScript loaded at runtime through
+JavaScriptCore, so packs can be installed and updated out of band on production builds; native code
+and WebAssembly cannot be, which is why those stay bundled.
+
+```
+pack list                                  # bundled + installed packs and their commands
+pack install owner/repo[/dir]              # from GitHub (any branch: owner/repo@branch/dir)
+pack install https://host/path/pack.json   # from any web server (files listed in "files")
+pack update [name]                         # re-fetch from the recorded source
+pack new mytools                           # scaffold ~/packs/mytools, edit it in the editor
+pack reload                                # after editing a pack in place
+```
+
+Resolution order: built-in commands, then `~/packs/*` (Files → dabterm → packs), then packs bundled
+in the app. A user pack with the same name as a bundled one overrides it, so a hotfix can be pushed
+as a pack and later folded into a release. `scripts/sync-packs.sh` refreshes the bundled packs from
+a packs repository before a release build.
+
+A pack command is a plain script: arguments in `process.argv.slice(2)`, piped input from
+`readStdin()`, the invoking name in `process.env.DABTERM_CMD` (one script can back several commands),
+exit status via `process.exit(n)`. See `dabterm/Resources/packs/core-tools` for examples
+(`jsonfmt`, `urlencode`, `ts`, `calc`).
+
+`pack.json`:
+
+```json
+{
+  "name": "core-tools", "version": "1.0.0", "description": "…",
+  "source": "dabbers/dabterm/dabterm/Resources/packs/core-tools",
+  "commands": [
+    { "name": "jsonfmt", "kind": "js", "entry": "jsonfmt.js", "summary": "…", "usage": "jsonfmt [-c] [-s] [file]" },
+    { "name": "hr",      "kind": "sh", "entry": "hr.sh" }
+  ]
+}
+```
+
 ## How git works here (read this)
 
 iOS can't run git, so v1 talks to the **GitHub Git Data API** directly: clone downloads the tree
@@ -123,7 +162,7 @@ cat "$(xcrun simctl get_app_container booted com.dab.dabterm data)/Documents/smo
 dabterm/
   App/        app entry, tab bar, shared model, smoke-test hook
   Terminal/   SwiftTerm wrapper, key bar
-  Shell/      session, line editor, tokenizer, command registry, Commands/
+  Shell/      session, line editor, tokenizer, command registry, Commands/, Packs/
   Network/    ICMP (ping/traceroute), DNS client
   Crypto/     openssl command adapter, hash commands
   SSH/        ssh_config parser, key loading/generation, ssh/scp/ssh-keygen, Hosts UI
@@ -131,6 +170,8 @@ dabterm/
   Git/        GitHub API client, GitHub-backed repo model, Keychain
   Files/      Documents-folder workspace helpers
   Settings/
+  Resources/packs/   packs bundled with the app (see Tool packs)
+scripts/sync-packs.sh  refresh bundled packs from a packs repo before a release
 Packages/DabCrypto/   libcrypto code in its own module (see note below)
 ```
 

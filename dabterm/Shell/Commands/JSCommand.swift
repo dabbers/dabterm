@@ -26,7 +26,7 @@ struct JSCommand: Command {
             runtime.context.setObject(runtime.argv, forKeyedSubscript: "__argv" as NSString)
             runtime.runModule(src, url: url)
             runtime.drainTimers()
-            return runtime.exitCode
+            return runtime.finalExitCode
         }
         if let stdin = ctx.stdin {   // piped input: run it as a script, never start the REPL
             runtime.evaluate(stdin, source: "<stdin>"); runtime.drainTimers(); return runtime.exitCode
@@ -151,7 +151,8 @@ final class JSRuntime {
 
         // process
         let process = JSValue(newObjectIn: c)!
-        process.setObject(ctx.env, forKeyedSubscript: "env" as NSString)
+        var env = ctx.env; env["DABTERM_CMD"] = ctx.name
+        process.setObject(env, forKeyedSubscript: "env" as NSString)
         process.setObject("ios", forKeyedSubscript: "platform" as NSString)
         process.setObject("v0.1.0-dabterm", forKeyedSubscript: "version" as NSString)
         process.setObject(ctx.cwd.path, forKeyedSubscript: "_cwd" as NSString)
@@ -165,6 +166,9 @@ final class JSRuntime {
         let stderrWrite: @convention(block) (String) -> Bool = { [ctx] s in ctx.err.write(s); return true }
         let stderr = JSValue(newObjectIn: c)!; stderr.setObject(stderrWrite, forKeyedSubscript: "write" as NSString)
         process.setObject(stderr, forKeyedSubscript: "stderr" as NSString)
+        process.setObject(ctx.stdin ?? "", forKeyedSubscript: "stdinText" as NSString)
+        let readStdin: @convention(block) () -> String = { [ctx] in ctx.stdin ?? "" }
+        c.setObject(readStdin, forKeyedSubscript: "readStdin" as NSString)
         c.setObject(process, forKeyedSubscript: "process" as NSString)
         c.evaluateScript("Object.defineProperty(process, 'argv', { get: () => ['js'].concat(globalThis.__argv || []) }); process.nextTick = f => setTimeout(f, 0); process.on = () => {};")
 
@@ -331,6 +335,13 @@ final class JSRuntime {
                 Thread.sleep(forTimeInterval: 0.005)
             }
         }
+    }
+
+    /// exitCode set by process.exit(), else process.exitCode if a script assigned it.
+    var finalExitCode: Int32 {
+        if exitCode != 0 { return exitCode }
+        if let v = context.objectForKeyedSubscript("process")?.objectForKeyedSubscript("exitCode"), v.isNumber { return v.toInt32() }
+        return 0
     }
 
     func inspect(_ v: JSValue) -> String {
