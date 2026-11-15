@@ -55,10 +55,17 @@ final class FlexKeyBar: ObservableObject {
 
     /// Called from an accessory-view getter while active: float `bar` for `owner` and return nil to UIKit.
     func show(_ bar: KeyBar, owner: UIResponder) {
+        if self.bar !== bar { hide() }
         self.bar = bar
         self.owner = owner
-        layout()
+        // UIKit is mid-way through reloading input views; touch the hierarchy on the next turn.
+        DispatchQueue.main.async { self.layout() }
     }
+
+    /// Container for the floating bar content; a plain view, so UIKit's input-view controllers are never involved.
+    private let container: UIView = {
+        let v = UIView(); v.backgroundColor = UIColor(white: 0.08, alpha: 1); return v
+    }()
 
     private func setActive(_ on: Bool) {
         guard on != active else { return }
@@ -66,35 +73,101 @@ final class FlexKeyBar: ObservableObject {
         log("active=\(on)")
         if !on { hide() }
         // Make UIKit re-ask for the accessory view so it docks or undocks the bar.
-        (owner ?? UIApplication.firstResponder)?.reloadInputViews()
+        DispatchQueue.main.async { [self] in (owner ?? UIApplication.firstResponder)?.reloadInputViews() }
     }
 
     private func keyboardChanged(_ frame: CGRect) {
         keyboardFrame = frame
         if hadHinge { log("keyboard frame=\(frame.integral) active=\(active)") }
+        // Remember the keyboard's natural height (minus the docked bar) while the hinge is not half-open.
+        if !active, !frame.isNull, frame.height > 80, let w = UIApplication.keyWindow, frame.height < w.bounds.height * 0.42 {
+            let barH: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 40 : 46
+            naturalKeyboardHeight[Int(w.bounds.width)] = frame.height - barH
+        }
         layout()
+        if hadHinge, active, !frame.isNull, frame.height > 50, let w = (owner as? UIView)?.window ?? UIApplication.keyWindow {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [self] in dumpKeyboardWindows(into: w); layout() }
+        }
     }
 
     private func layout() {
         guard active, let bar, let window = (owner as? UIView)?.window ?? UIApplication.keyWindow else { hide(); return }
         guard !keyboardFrame.isNull else { hide(); return }
-        let kb = window.convert(keyboardFrame, from: nil)
+        var kb = window.convert(keyboardFrame, from: nil)
         guard kb.minY < window.bounds.maxY else { hide(); return }
-        let h = bar.intrinsicContentSize.height
-        if bar.superview !== window {
-            bar.removeFromSuperview()
-            bar.translatesAutoresizingMaskIntoConstraints = true
-            window.addSubview(bar)
+        // On a half-open fold the reported keyboard frame starts at the hinge and includes an empty band
+        // above the keys. Use the real key-plane view when we can find it, so the bar hugs the keys.
+        if let keys = Self.visibleKeyboardFrame(in: window), keys.minY > kb.minY + 8, keys.minY < kb.maxY {
+            kb = keys
+        } else if let natural = naturalKeyboardHeight[Int(window.bounds.width)], kb.height > natural + 30 {
+            kb.origin.y = kb.maxY - natural
+        } else if kb.height > window.bounds.height * 0.42 {
+            // Padded frame and no flat-mode measurement yet: assume a typical keyboard height.
+            kb.origin.y = kb.maxY - (window.bounds.height * 0.345).rounded()
         }
-        bar.frame = CGRect(x: 0, y: kb.minY - h, width: window.bounds.width, height: h)
-        window.bringSubviewToFront(bar)
+        let h = bar.intrinsicContentSize.height
+        if container.superview !== window { container.removeFromSuperview(); window.addSubview(container) }
+        container.frame = CGRect(x: 0, y: kb.minY - h, width: window.bounds.width, height: h)
+        if bar.content.superview !== container {
+            bar.content.removeFromSuperview()
+            container.addSubview(bar.content)
+        }
+        bar.content.frame = container.bounds
+        window.bringSubviewToFront(container)
         if floatingHeight != h { floatingHeight = h }
-        log("float bar at y=\(Int(bar.frame.minY)) kbTop=\(Int(kb.minY)) windowH=\(Int(window.bounds.height))")
+        let msg = "float bar at y=\(Int(container.frame.minY)) kbTop=\(Int(kb.minY)) windowH=\(Int(window.bounds.height))"
+        if msg != lastLayoutMsg { lastLayoutMsg = msg; log(msg) }
     }
 
     private func hide() {
-        if let bar, bar.superview is UIWindow { bar.removeFromSuperview() }
+        if let bar, bar.content.superview === container {
+            bar.content.removeFromSuperview()
+            bar.content.frame = bar.bounds
+            bar.addSubview(bar.content)
+        }
+        container.removeFromSuperview()
         if floatingHeight != 0 { floatingHeight = 0 }
+    }
+
+    // MARK: Keyboard window inspection (read-only; frames of the system keyboard's own views)
+    private static func allWindows() -> [UIWindow] {
+        var ws = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows)
+        for w in UIApplication.shared.windows where !ws.contains(w) { ws.append(w) }
+        return ws
+    }
+    /// Frame (in `window` coordinates) of the keyboard's key plane, if the keyboard window is visible in-process.
+    static func visibleKeyboardFrame(in window: UIWindow) -> CGRect? {
+        var best: CGRect?
+        for w in allWindows() where "\(type(of: w))".contains("Keyboard") || "\(type(of: w))".contains("TextEffects") {
+            func walk(_ v: UIView, _ depth: Int) {
+                let name = "\(type(of: v))"
+                if name.contains("RemoteKeyboardPlaceholder") || name.contains("UIKeyboardImpl") || name.contains("KBKeyplaneView") {
+                    let f = window.convert(v.bounds, from: v)
+                    if f.height > 80, best == nil || f.minY > best!.minY { best = f }
+                }
+                if depth < 10 { for sub in v.subviews where !sub.isHidden { walk(sub, depth + 1) } }
+            }
+            walk(w, 0)
+        }
+        return best
+    }
+    private var lastLayoutMsg = ""
+    /// Keyboard height without the bar, keyed by window width (orientation), measured while flat.
+    private var naturalKeyboardHeight: [Int: CGFloat] = [:]
+    private var dumpedFrame: CGRect = .null
+    /// One-shot hierarchy dump per keyboard frame, for diagnosing fold layouts from ~/hinge.log.
+    private func dumpKeyboardWindows(into window: UIWindow) {
+        guard dumpedFrame != keyboardFrame else { return }
+        dumpedFrame = keyboardFrame
+        for w in Self.allWindows() where w !== window {
+            log("window \(type(of: w)) frame=\(w.frame.integral) hidden=\(w.isHidden) level=\(w.windowLevel.rawValue)")
+            func walk(_ v: UIView, _ depth: Int) {
+                let f = window.convert(v.bounds, from: v).integral
+                if f.height >= 30 { log("  \(String(repeating: " ", count: depth))\(type(of: v)) \(f)") }
+                if depth < 7 { for sub in v.subviews where !sub.isHidden { walk(sub, depth + 1) } }
+            }
+            walk(w, 0)
+        }
     }
 
     private func log(_ s: String) {

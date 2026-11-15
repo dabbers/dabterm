@@ -34,16 +34,24 @@ final class KeyBar: UIInputView {
     required init?(coder: NSCoder) { fatalError() }
     override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: frame.height) }
 
+    /// Everything visible lives in `content`, a plain view that FlexKeyBar can lift out of this
+    /// input view and float elsewhere. The UIInputView itself must stay where UIKit put it.
+    let content = UIView()
+
     private func build() {
+        content.frame = bounds
+        content.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        content.backgroundColor = .clear
+        addSubview(content)
         let scroll = UIScrollView(); scroll.showsHorizontalScrollIndicator = false
         scroll.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(scroll)
+        content.addSubview(scroll)
         let stack = UIStackView(); stack.axis = .horizontal; stack.spacing = 6; stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         scroll.addSubview(stack)
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: leadingAnchor), scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
-            scroll.topAnchor.constraint(equalTo: topAnchor), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: content.topAnchor), scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
             stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 6),
             stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -6),
             stack.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor, constant: 4),
