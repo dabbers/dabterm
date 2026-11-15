@@ -149,6 +149,7 @@ struct TerminalTabView: View {
             }
         }
         .background(Color.black.ignoresSafeArea())
+        .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { model.activeSession?.focusTerminal?() } }
     }
 }
 

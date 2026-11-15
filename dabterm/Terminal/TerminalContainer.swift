@@ -41,6 +41,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink {
         if !started, bounds.width > 10 {
             started = true
             session?.start()
+            DispatchQueue.main.async { _ = self.becomeFirstResponder() }
         }
     }
 
