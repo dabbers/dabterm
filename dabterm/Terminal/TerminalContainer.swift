@@ -61,11 +61,9 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
         return ok
     }
 
-    /// While the laptop deck owns the lower half, an empty input view keeps the system keyboard away.
-    override var inputView: UIView? {
-        get { LaptopDeck.shared.active ? LaptopDeck.emptyInputView : nil }
-        set { }
-    }
+    /// While the laptop deck owns the lower half there must be no keyboard, so no first responder here;
+    /// soft and hardware keys arrive through the deck instead.
+    override var canBecomeFirstResponder: Bool { !LaptopDeck.shared.active && super.canBecomeFirstResponder }
 
     /// The key bar docks above the keyboard as an accessory view, except on a half-open foldable,
     /// where the laptop deck shows it on the lower panel instead (see LaptopDeck).

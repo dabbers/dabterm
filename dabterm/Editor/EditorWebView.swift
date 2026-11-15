@@ -162,11 +162,12 @@ enum EditorKeyBarInstaller {
         }
         let imp = imp_implementationWithBlock(block)
         class_addMethod(newClass, NSSelectorFromString("inputAccessoryView"), imp, "@@:")
-        // While the laptop deck is up, an empty input view keeps the system keyboard away from the editor.
-        let inputBlock: @convention(block) (UIView) -> UIView? = { _ in
-            MainActor.assumeIsolated { LaptopDeck.shared.active ? LaptopDeck.emptyInputView : nil }
+        // While the laptop deck is up the editor must not raise a keyboard: refuse first responder.
+        // CodeMirror still edits through dabterm.insert / dabterm.key without DOM focus.
+        let frBlock: @convention(block) (UIView) -> Bool = { _ in
+            MainActor.assumeIsolated { !LaptopDeck.shared.active }
         }
-        class_addMethod(newClass, NSSelectorFromString("inputView"), imp_implementationWithBlock(inputBlock), "@@:")
+        class_addMethod(newClass, NSSelectorFromString("canBecomeFirstResponder"), imp_implementationWithBlock(frBlock), "B@:")
         objc_registerClassPair(newClass)
         object_setClass(target, newClass)
     }

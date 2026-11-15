@@ -14,10 +14,11 @@ enum SoftKey {
 /// a keyboard frame that starts at the hinge, so accessory views and SwiftUI's keyboard avoidance both
 /// land above the hinge, and the keys sit far below them.
 ///
-/// Instead of fighting that, the app owns the lower half: the system keyboard is suppressed with an
-/// empty `inputView`, and a `LaptopDeckView` (the key bar strip, then a soft keyboard) is laid over the
-/// lower half of the window. The terminal or editor keeps the upper half and stays first responder,
-/// so hardware keyboards keep working. Flat devices and landscape postures never see any of this.
+/// Worse, while any keyboard is up in that posture (even an empty input view) iOS shrinks the app's
+/// window to the upper half. So the app owns the lower half with no keyboard at all: hosts refuse first
+/// responder, the deck view (a plain view) holds it and forwards hardware key presses, and a
+/// `LaptopDeckView` (the key bar strip, then a soft keyboard) lies over the lower half of the window.
+/// Flat devices and landscape postures never see any of this.
 @MainActor
 final class LaptopDeck: ObservableObject {
     static let shared = LaptopDeck()
@@ -26,14 +27,6 @@ final class LaptopDeck: ObservableObject {
     @Published private(set) var active = false
     /// Height of the deck (0 when inactive); the root view pads its bottom by this.
     @Published private(set) var inset: CGFloat = 0
-
-    /// Shared empty input view: returned as `inputView` while active so the system keyboard stays away.
-    static let emptyInputView: UIView = {
-        let v = UIView(frame: CGRect(x: 0, y: 0, width: 1, height: 0.5))
-        v.isUserInteractionEnabled = false
-        v.backgroundColor = .clear
-        return v
-    }()
 
     struct Host {
         weak var view: UIView?
@@ -98,22 +91,36 @@ final class LaptopDeck: ObservableObject {
     /// Re-evaluate posture and window shape; hosts call it from layoutSubviews too (cheap when nothing changed).
     func refresh() {
         guard let window = hostWindow() else { return }
-        let portrait = window.bounds.height > window.bounds.width
+        // Judge the posture by the screen, not the window: while any keyboard is up in this posture iOS
+        // shrinks the app's window to the upper half, which would read as landscape.
+        let screen = window.screen.bounds.size
+        let portrait = screen.height > screen.width
         let shouldBeActive = partiallyOpen && portrait
         if shouldBeActive != active {
             active = shouldBeActive
-            log("deck active=\(active) window=\(window.bounds.size)")
-            if !active { hide() }
-            // Make UIKit re-ask every hosted first responder for inputView/inputAccessoryView.
-            DispatchQueue.main.async { [self] in
-                var responders: [UIResponder] = []
-                if let fr = UIApplication.firstResponder { responders.append(fr) }
-                for h in hosts.values { if let v = h.view, let fr = Self.firstResponder(in: v), !responders.contains(where: { $0 === fr }) { responders.append(fr) } }
-                for r in responders { r.reloadInputViews() }
+            log("deck active=\(active) window=\(window.bounds.size) screen=\(screen)")
+            if active {
+                // No keyboard at all while split: resign whatever holds one, then let the deck (a plain view,
+                // so nothing to show) hold first responder for hardware keys.
+                dismissKeyboards()
                 layout()
+                _ = deckView.becomeFirstResponder()
+            } else {
+                hide()
+                if deckView.isFirstResponder { deckView.resignFirstResponder() }
+                // Hand focus back to the host that is on screen (the terminal wants its keyboard back).
+                if let v = targetHost()?.view, v.canBecomeFirstResponder { _ = v.becomeFirstResponder() }
             }
         }
-        if active { layout() }
+        if active {
+            layout()
+            if let fr = UIApplication.firstResponder, fr !== deckView { dismissKeyboards(); _ = deckView.becomeFirstResponder() }
+        }
+    }
+
+    private func dismissKeyboards() {
+        if let fr = UIApplication.firstResponder, fr !== deckView { fr.resignFirstResponder() }
+        for h in hosts.values { if let v = h.view, let fr = Self.firstResponder(in: v) { fr.resignFirstResponder() } }
     }
 
     private func hostWindow() -> UIWindow? {
@@ -207,6 +214,36 @@ final class LaptopDeckView: UIView {
         addSubview(keyboard)
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    /// The deck holds first responder while split: it is not a UIKeyInput, so no keyboard appears, but a
+    /// hardware keyboard still delivers presses here, which go to the host like soft keys.
+    override var canBecomeFirstResponder: Bool { true }
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        var unhandled = Set<UIPress>()
+        for press in presses {
+            guard let key = press.key, let soft = Self.softKey(for: key) else { unhandled.insert(press); continue }
+            var mods: SoftKey.Modifiers = []
+            if key.modifierFlags.contains(.control) { mods.insert(.ctrl) }
+            if key.modifierFlags.contains(.alternate) { mods.insert(.alt) }
+            keyboard.onKey?(soft, mods)
+        }
+        if !unhandled.isEmpty { super.pressesBegan(unhandled, with: event) }
+    }
+    private static func softKey(for key: UIKey) -> SoftKey? {
+        switch key.keyCode {
+        case .keyboardEscape: return .esc
+        case .keyboardTab: return .tab
+        case .keyboardReturnOrEnter, .keypadEnter: return .enter
+        case .keyboardDeleteOrBackspace: return .backspace
+        case .keyboardUpArrow: return .up
+        case .keyboardDownArrow: return .down
+        case .keyboardLeftArrow: return .left
+        case .keyboardRightArrow: return .right
+        default:
+            let chars = key.modifierFlags.contains(.control) ? key.charactersIgnoringModifiers : key.characters
+            return chars.isEmpty ? nil : .text(chars)
+        }
+    }
 
     func setStrip(_ content: UIView, from bar: KeyBar) {
         if strip === content { return }
