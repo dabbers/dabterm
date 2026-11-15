@@ -41,13 +41,13 @@ struct EditorScreen: View {
                         Divider()
                         Button { showNewFile = true } label: { Label("New file", systemImage: "doc.badge.plus") }
                         if let f = editor.openFile {
+                            Button { editor.save() } label: { Label(editor.dirty ? "Save" : "Saved", systemImage: "checkmark") }
+                                .disabled(!editor.dirty)
+                                .keyboardShortcut("s", modifiers: .command)
                             Button { model.runInTerminal("cd \(shellQuote(f.deletingLastPathComponent().path))") } label: { Label("Terminal here", systemImage: "terminal") }
                             ShareLink(item: f) { Label("Share file", systemImage: "square.and.arrow.up") }
                         }
                     } label: { Image(systemName: "ellipsis.circle") }
-                    Button { editor.save() } label: { Image(systemName: editor.dirty ? "square.and.arrow.down.fill" : "square.and.arrow.down") }
-                        .disabled(editor.openFile == nil)
-                        .keyboardShortcut("s", modifiers: .command)
                 }
             }
         }

@@ -111,9 +111,11 @@ final class KeyboardInset: ObservableObject {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let frame = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
                   let screen = (n.object as? UIScreen) ?? UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.screen }).first else { return }
-            let visible = max(0, screen.bounds.height - frame.minY)
-            // Only the accessory bar (< 120pt) needs our help; a full keyboard is handled by SwiftUI.
-            self.bottom = visible > 0 && visible < 120 ? visible : 0
+            // The root view ignores SwiftUI's keyboard safe area and pads by this instead, so the inset is
+            // computed in one place (SwiftUI's avoidance and the floating bar's padding used to stack).
+            // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
+            guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
+            self.bottom = min(frame.height, max(0, screen.bounds.height - frame.minY))
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
     }
@@ -131,8 +133,8 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
-        .ignoresSafeArea(.keyboard, edges: flex.floatingInset > 0 ? .bottom : [])
-        .padding(.bottom, keyboardInset.bottom + flex.floatingInset)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .padding(.bottom, flex.floatingInset > 0 ? flex.floatingInset : keyboardInset.bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.

@@ -49,8 +49,22 @@ final class KeyBar: UIInputView {
         let stack = UIStackView(); stack.axis = .horizontal; stack.spacing = 6; stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         scroll.addSubview(stack)
+        // Hide-keyboard stays pinned at the trailing edge, outside the scrolling keys, so it is always
+        // one tap away on a narrow screen (the folded cover display) where the keyboard hides the tab bar.
+        let hide = makeButton("⌨︎", key: .hideKeyboard)
+        hide.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(hide)
+        let divider = UIView(); divider.backgroundColor = UIColor(white: 0.35, alpha: 1)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(divider)
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+            hide.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -6),
+            hide.centerYAnchor.constraint(equalTo: content.centerYAnchor),
+            divider.trailingAnchor.constraint(equalTo: hide.leadingAnchor, constant: -6),
+            divider.widthAnchor.constraint(equalToConstant: 1),
+            divider.topAnchor.constraint(equalTo: content.topAnchor, constant: 8),
+            divider.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -8),
+            scroll.leadingAnchor.constraint(equalTo: content.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: divider.leadingAnchor),
             scroll.topAnchor.constraint(equalTo: content.topAnchor), scroll.bottomAnchor.constraint(equalTo: content.bottomAnchor),
             stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 6),
             stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -6),
@@ -66,26 +80,30 @@ final class KeyBar: UIInputView {
             ("`", .text("`"), false), ("\\", .text("\\"), false), ("'", .text("'"), false), ("\"", .text("\""), false),
             ("{", .text("{"), false), ("}", .text("}"), false), ("[", .text("["), false), ("]", .text("]"), false),
             ("<", .text("<"), false), (">", .text(">"), false), ("$", .text("$"), false), ("&", .text("&"), false),
-            ("home", .home, false), ("end", .end, false), ("all", .selectAll, false), ("⌨︎", .hideKeyboard, false),
+            ("home", .home, false), ("end", .end, false), ("all", .selectAll, false),
         ]
         items = items.filter { _ in true }
         for (title, key, sticky) in items {
-            let b = UIButton(type: .system)
-            var cfg = UIButton.Configuration.gray()
-            cfg.title = title
-            cfg.baseForegroundColor = .white
-            cfg.baseBackgroundColor = UIColor(white: 0.22, alpha: 1)
-            cfg.cornerStyle = .medium
-            cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
-            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { var a = $0; a.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium); return a }
-            b.configuration = cfg
-            b.addAction(UIAction { [weak self] _ in self?.tapped(key, button: b) }, for: .touchUpInside)
+            let b = makeButton(title, key: key)
             if sticky { switch key { case .ctrl: ctrlButton = b; case .alt: altButton = b; case .select: selectButton = b; default: break } }
             // arrows repeat on long press
             if case .left = key { addRepeat(b, key) }; if case .right = key { addRepeat(b, key) }
             if case .up = key { addRepeat(b, key) }; if case .down = key { addRepeat(b, key) }
             stack.addArrangedSubview(b)
         }
+    }
+    private func makeButton(_ title: String, key: Key) -> UIButton {
+        let b = UIButton(type: .system)
+        var cfg = UIButton.Configuration.gray()
+        cfg.title = title
+        cfg.baseForegroundColor = .white
+        cfg.baseBackgroundColor = UIColor(white: 0.22, alpha: 1)
+        cfg.cornerStyle = .medium
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { var a = $0; a.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .medium); return a }
+        b.configuration = cfg
+        b.addAction(UIAction { [weak self] _ in self?.tapped(key, button: b) }, for: .touchUpInside)
+        return b
     }
     private var repeatTimer: Timer?
     private func addRepeat(_ b: UIButton, _ key: Key) {

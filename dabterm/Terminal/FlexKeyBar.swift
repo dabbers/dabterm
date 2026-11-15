@@ -11,8 +11,8 @@ final class FlexKeyBar: ObservableObject {
 
     /// True while the hinge is partially open and the bar should float.
     @Published private(set) var active = false
-    /// Distance from the window's bottom edge to the top of the floating bar (0 when docked normally).
-    /// The root view ignores the keyboard safe area and pads by this instead, so content reaches the bar.
+    /// Distance from the window bottom to the top of the floating bar (0 when docked normally). The root
+    /// view does its own keyboard avoidance and pads by this instead, so content reaches the bar.
     @Published private(set) var floatingInset: CGFloat = 0
 
     private var hingeStates: [ObjectIdentifier: Bool] = [:]
@@ -35,6 +35,7 @@ final class FlexKeyBar: ObservableObject {
 
     /// Start observing the hinge through `view`'s hierarchy (no-op before iOS 27.1 or on flat devices).
     func observe(_ view: UIView) {
+        observed[ObjectIdentifier(view)] = { [weak view] in view }
         if #available(iOS 27.1, *) {
             let id = ObjectIdentifier(view)
             let interaction = UIHingeInteraction { [weak self] _, update in
@@ -74,16 +75,27 @@ final class FlexKeyBar: ObservableObject {
         log("active=\(on)")
         if !on { hide() }
         // Make UIKit re-ask for the accessory view so it docks or undocks the bar.
-        DispatchQueue.main.async { [self] in (owner ?? UIApplication.firstResponder)?.reloadInputViews() }
+        DispatchQueue.main.async { [self] in
+            // The accessory getter is only re-asked on the first responder, which for the editor is a
+            // WebKit content view, not the view we observe: reload on every hosted first responder.
+            var responders: [UIResponder] = []
+            if let fr = UIApplication.firstResponder { responders.append(fr) }
+            if let o = owner, !responders.contains(where: { $0 === o }) { responders.append(o) }
+            for get in observed.values { if let v = get(), let fr = Self.firstResponder(in: v), !responders.contains(where: { $0 === fr }) { responders.append(fr) } }
+            for r in responders { r.reloadInputViews() }
+            log("reloadInputViews on \(responders.map { "\(type(of: $0))" })")
+        }
     }
 
     private func keyboardChanged(_ frame: CGRect) {
         keyboardFrame = frame
         if hadHinge { log("keyboard frame=\(frame.integral) active=\(active)") }
-        // Remember the keyboard's natural height (minus the docked bar) while the hinge is not half-open.
-        if !active, !frame.isNull, frame.height > 80, let w = UIApplication.keyWindow, frame.height < w.bounds.height * 0.42 {
+        // Remember the keyboard's bare height per window width. Every frame iOS reports, including the
+        // off-screen one when it hides, carries it; a docked bar adds its own height, the floating one
+        // does not. The half-open frame that spans the whole lower panel is skipped (over half the window).
+        if !frame.isNull, frame.height > 80, let w = UIApplication.keyWindow, frame.height < w.bounds.height * 0.5 {
             let barH: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 40 : 46
-            naturalKeyboardHeight[Int(w.bounds.width)] = frame.height - barH
+            bareKeyboardHeight[Int(w.bounds.width)] = active ? frame.height : frame.height - barH
         }
         layout()
         if hadHinge, active, !frame.isNull, frame.height > 50, let w = (owner as? UIView)?.window ?? UIApplication.keyWindow {
@@ -93,18 +105,22 @@ final class FlexKeyBar: ObservableObject {
 
     private func layout() {
         guard active, let bar, let window = (owner as? UIView)?.window ?? UIApplication.keyWindow else { hide(); return }
-        guard !keyboardFrame.isNull else { hide(); return }
+        // While the keyboard animates away iOS sends empty or zero-origin frames; treating one as a
+        // keyboard at the top of the window pushed the bar (and the content inset) off-screen.
+        guard !keyboardFrame.isNull, keyboardFrame.height >= 50, keyboardFrame.width >= 100 else { hide(); return }
         var kb = window.convert(keyboardFrame, from: nil)
-        guard kb.minY < window.bounds.maxY else { hide(); return }
-        // On a half-open fold the reported keyboard frame starts at the hinge and includes an empty band
-        // above the keys. Use the real key-plane view when we can find it, so the bar hugs the keys.
-        if let keys = Self.visibleKeyboardFrame(in: window), keys.minY > kb.minY + 8, keys.minY < kb.maxY {
+        guard kb.minY > 0, kb.minY < window.bounds.maxY else { hide(); return }
+        // On a half-open fold the reported keyboard frame starts at the hinge and spans the whole lower
+        // panel; the keys sit at its bottom at their bare height, with an empty band above them that the
+        // app can draw in. Use the key-plane view when it is in-process, else the measured bare height.
+        // The placeholder view is padded too on the phone (it spans the lower panel), so a measured bare
+        // height wins; the placeholder only helps when it is tighter than the frame and nothing is measured.
+        if kb.height > window.bounds.height * 0.5, let bare = bareKeyboardHeight[Int(window.bounds.width)] {
+            kb.origin.y = kb.maxY - min(bare, kb.height - 40)
+        } else if let keys = Self.visibleKeyboardFrame(in: window), keys.minY > kb.minY + 8, keys.minY < kb.maxY, keys.height < window.bounds.height * 0.5 {
             kb = keys
-        } else if let natural = naturalKeyboardHeight[Int(window.bounds.width)], kb.height > natural + 30 {
-            kb.origin.y = kb.maxY - natural
-        } else if kb.height > window.bounds.height * 0.42 {
-            // Padded frame and no flat-mode measurement yet: assume a typical keyboard height.
-            kb.origin.y = kb.maxY - (window.bounds.height * 0.345).rounded()
+        } else if kb.height > window.bounds.height * 0.5 {
+            kb.origin.y = kb.maxY - min((window.bounds.height * 0.345).rounded(), kb.height - 40)
         }
         let h = bar.intrinsicContentSize.height
         if container.superview !== window { container.removeFromSuperview(); window.addSubview(container) }
@@ -154,8 +170,15 @@ final class FlexKeyBar: ObservableObject {
         return best
     }
     private var lastLayoutMsg = ""
-    /// Keyboard height without the bar, keyed by window width (orientation), measured while flat.
-    private var naturalKeyboardHeight: [Int: CGFloat] = [:]
+    /// Views that host a key bar; used to find the first responder to reload input views on.
+    private var observed: [ObjectIdentifier: () -> UIView?] = [:]
+    private static func firstResponder(in v: UIView) -> UIResponder? {
+        if v.isFirstResponder { return v }
+        for sub in v.subviews { if let r = firstResponder(in: sub) { return r } }
+        return nil
+    }
+    /// Keyboard height without the bar, keyed by window width (orientation).
+    private var bareKeyboardHeight: [Int: CGFloat] = [:]
     private var dumpedFrame: CGRect = .null
     /// One-shot hierarchy dump per keyboard frame, for diagnosing fold layouts from ~/hinge.log.
     private func dumpKeyboardWindows(into window: UIWindow) {
