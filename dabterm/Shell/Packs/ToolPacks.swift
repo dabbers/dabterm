@@ -61,16 +61,19 @@ struct PackCommand: Command {
     }
 }
 
-@MainActor
-final class ToolPackManager {
+/// Thread-safe: commands run off the main actor, so state is guarded by a lock.
+final class ToolPackManager: @unchecked Sendable {
     static let shared = ToolPackManager()
-    private(set) var packs: [String: ToolPack] = [:]
-    private(set) var commands: [String: PackCommand] = [:]
-    nonisolated static var userDir: URL { Workspace.root.appendingPathComponent("packs", isDirectory: true) }
+    private let lock = NSLock()
+    private var _packs: [String: ToolPack] = [:]
+    private var _commands: [String: PackCommand] = [:]
+    var packs: [String: ToolPack] { lock.withLock { _packs } }
+    var commands: [String: PackCommand] { lock.withLock { _commands } }
+    static var userDir: URL { Workspace.root.appendingPathComponent("packs", isDirectory: true) }
     static var bundledDir: URL? { Bundle.main.url(forResource: "packs", withExtension: nil) }
 
     func reload() {
-        packs = [:]; commands = [:]
+        var packs: [String: ToolPack] = [:]; var commands: [String: PackCommand] = [:]
         var roots: [(URL, Bool)] = []
         if let b = Self.bundledDir { roots.append((b, true)) }
         roots.append((Self.userDir, false))
@@ -88,6 +91,7 @@ final class ToolPackManager {
                 commands[c.name] = PackCommand(pack: pack, cmd: c)
             }
         }
+        lock.withLock { _packs = packs; _commands = commands }
     }
 
     static func load(_ dir: URL, bundled: Bool) -> ToolPack? {
@@ -182,12 +186,12 @@ struct PackCLICommand: Command {
     let usage = "pack list | info <name> | install <owner/repo[/dir] | url/pack.json> | update [name] | remove <name> | reload | new <name>"
     let summary = "manage tool packs (add commands without an app update)"
     func run(_ ctx: CommandContext) async throws -> Int32 {
-        let mgr = await ToolPackManager.shared
+        let mgr = ToolPackManager.shared
         let sub = ctx.args.first ?? "list"
         let arg = ctx.args.count > 1 ? ctx.args[1] : nil
         switch sub {
         case "list", "ls":
-            let packs = await mgr.packs.values.sorted { $0.manifest.name < $1.manifest.name }
+            let packs = mgr.packs.values.sorted { $0.manifest.name < $1.manifest.name }
             if packs.isEmpty { ctx.print("no packs installed. Try: pack install dabbers/dabterm/dabterm/Resources/packs/core-tools"); return 0 }
             for p in packs {
                 ctx.print("\u{1b}[1m\(p.manifest.name)\u{1b}[0m \(p.manifest.version)  \u{1b}[2m\(p.bundled ? "bundled" : "~/packs")\u{1b}[0m  \(p.manifest.description ?? "")")
@@ -195,7 +199,7 @@ struct PackCLICommand: Command {
             }
             ctx.print("\nPacks are plain folders in Files → dabterm → packs; edit the .js files there and run `pack reload`.")
         case "info":
-            guard let n = arg, let p = await mgr.packs[n] else { throw CommandError("usage: pack info <name>") }
+            guard let n = arg, let p = mgr.packs[n] else { throw CommandError("usage: pack info <name>") }
             ctx.print("\(p.manifest.name) \(p.manifest.version)\n\(p.manifest.description ?? "")\nlocation: \(Workspace.display(p.root))\nsource: \(p.manifest.source ?? "-")")
             for c in p.manifest.commands { ctx.print("  \(c.name.padding(toLength: 14, withPad: " ", startingAt: 0)) \(c.kind)  \(c.entry)  \(c.summary ?? "")") }
         case "install", "add":
@@ -203,10 +207,10 @@ struct PackCLICommand: Command {
             let p = try await mgr.install(spec) { ctx.printErr($0) }
             ctx.print("✓ installed \(p.manifest.name) \(p.manifest.version): \(p.manifest.commands.map(\.name).joined(separator: " "))")
         case "update", "upgrade":
-            let installed = await mgr.packs.values.filter { !$0.bundled }.map(\.manifest.name)
+            let installed = mgr.packs.values.filter { !$0.bundled }.map(\.manifest.name)
             let targets = arg.map { [$0] } ?? installed
             for n in targets {
-                guard let p = await mgr.packs[n] else { ctx.printErr("no pack named \(n)"); continue }
+                guard let p = mgr.packs[n] else { ctx.printErr("no pack named \(n)"); continue }
                 guard let src = p.manifest.source else { ctx.printErr("\(n): no source recorded; reinstall with pack install"); continue }
                 let old = p.manifest.version
                 let np = try await mgr.install(src) { ctx.printErr($0) }
@@ -214,8 +218,8 @@ struct PackCLICommand: Command {
             }
         case "remove", "rm", "uninstall":
             guard let n = arg else { throw CommandError("usage: pack remove <name>") }
-            try await mgr.remove(n); ctx.print("removed \(n)")
-        case "reload": await mgr.reload(); ctx.print("reloaded \(await mgr.packs.count) packs, \(await mgr.commands.count) commands")
+            try mgr.remove(n); ctx.print("removed \(n)")
+        case "reload": mgr.reload(); ctx.print("reloaded \(mgr.packs.count) packs, \(mgr.commands.count) commands")
         case "new":
             guard let n = arg else { throw CommandError("usage: pack new <name>") }
             let dir = ToolPackManager.userDir.appendingPathComponent(n)
@@ -224,7 +228,7 @@ struct PackCLICommand: Command {
             let enc = JSONEncoder(); enc.outputFormatting = [.prettyPrinted, .sortedKeys]
             try enc.encode(manifest).write(to: dir.appendingPathComponent("pack.json"))
             try "// args after the command name are in process.argv.slice(2); piped input in readStdin()\nconst who = process.argv[2] || 'world';\nconsole.log(`hello, ${who}!`);\n".write(to: dir.appendingPathComponent("hello.js"), atomically: true, encoding: .utf8)
-            await mgr.reload()
+            mgr.reload()
             ctx.print("created \(Workspace.display(dir)) — try `hello-\(n)`; edit with `edit \(Workspace.display(dir))`")
         default: throw CommandError("usage: \(usage)")
         }

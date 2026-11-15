@@ -23,7 +23,7 @@ struct HelpCommand: Command {
             ctx.print("\u{1b}[1;36m\(title)\u{1b}[0m")
             for n in names { if let c = CommandRegistry.shared.command(named: n) { ctx.print("  \u{1b}[1m\(n.padding(toLength: 12, withPad: " ", startingAt: 0))\u{1b}[0m \(c.summary)") } }
         }
-        let packCmds = await ToolPackManager.shared.commands.values.sorted { $0.name < $1.name }
+        let packCmds = ToolPackManager.shared.commands.values.sorted { $0.name < $1.name }
         if !packCmds.isEmpty {
             ctx.print("\u{1b}[1;36mPacks\u{1b}[0m  (pack list · pack install owner/repo)")
             for c in packCmds { ctx.print("  \u{1b}[1m\(c.name.padding(toLength: 12, withPad: " ", startingAt: 0))\u{1b}[0m \(c.summary)") }
@@ -104,7 +104,8 @@ struct WhichCommand: Command {
     func run(_ ctx: CommandContext) async throws -> Int32 {
         var code: Int32 = 0
         for a in ctx.args {
-            if CommandRegistry.shared.command(named: a) != nil { ctx.print("\(a): dabterm built-in") }
+            if CommandRegistry.shared.isBuiltin(a) { ctx.print("\(a): dabterm built-in") }
+            else if let pc = ToolPackManager.shared.commands[a] { ctx.print("\(a): pack \(pc.pack.manifest.name) (\(Workspace.display(pc.pack.root.appendingPathComponent(pc.cmd.entry))))") }
             else if FileManager.default.fileExists(atPath: Workspace.binDir.appendingPathComponent(a).path) { ctx.print(Workspace.binDir.appendingPathComponent(a).path) }
             else if FileManager.default.fileExists(atPath: Workspace.binDir.appendingPathComponent(a + ".sh").path) { ctx.print(Workspace.binDir.appendingPathComponent(a + ".sh").path) }
             else { ctx.print("\(a) not found"); code = 1 }
