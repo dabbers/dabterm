@@ -1,0 +1,31 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+.swiftpm/
+dabterm.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# Editor web build inputs (the built bundle in Resources/editor is committed)
+dabterm/Editor/web/node_modules/
+
+# Keep dependency pins
+!dabterm.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Secrets — never commit tokens or keys
+*.pem
+*.key
+*.p12
+id_*
+.env
+.env.*
+
+# macOS
+.DS_Store

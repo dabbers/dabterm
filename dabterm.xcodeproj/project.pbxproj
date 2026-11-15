@@ -1,0 +1,593 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		039E7C40978B03E85D093010 /* OpenSSLCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */; };
+		05A2421EB0D7482DDF603133 /* TerminalContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E38296F173038059B88B9A2 /* TerminalContainer.swift */; };
+		11E36D7E44641ABCA736D0D5 /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */; };
+		159285B34C5A1F853F6E293F /* HostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A6CCF8C69F84680140B1C6 /* HostsView.swift */; };
+		1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F44612343221C54A754E77 /* ShellIO.swift */; };
+		27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */; };
+		2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123B426355E92471BC4F0796 /* SSHConfig.swift */; };
+		33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CC58D405C3F44BBBF6487A /* Workspace.swift */; };
+		3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472EA149190C7C58CC34DA91 /* SSHCommands.swift */; };
+		3AC303134C4DEC7FC81598C5 /* DabtermApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE69F9F038C664BCFDABF690 /* DabtermApp.swift */; };
+		4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86DC88AD0561520B447A70E0 /* KeyBar.swift */; };
+		51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E6F1115C567E76CB92C59F /* ShellCommands.swift */; };
+		55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4327DCA24632381F84315B0E /* TextCommands.swift */; };
+		56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8806238848ABF3CC1EE8F885 /* DabCrypto */; };
+		74C1FD2365AC5A7ECC4935D5 /* GitCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */; };
+		79D400A8743762C71C830F2D /* EditorWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8373181A3E2F984A457A192 /* EditorWebView.swift */; };
+		7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */; };
+		80B0DAFA03490A83210537C8 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 9EE43C9E8D45C681F73DB8D3 /* Citadel */; };
+		915BC5BF58132AF177D18F89 /* EditorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B48B2FA74A39FD3D45151C /* EditorScreen.swift */; };
+		966380A5CA689BE0E8B630F9 /* ShellSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */; };
+		97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */; };
+		97E59425A05D2C2347FCACCD /* DNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 976DB65985DB778DB7C52CE6 /* DNS.swift */; };
+		A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B8A4CB47B7261E8ECB279C /* GitHubClient.swift */; };
+		A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC099E58B81A9C70320B7641 /* ICMP.swift */; };
+		A8790ABBA9ED3A0091D2014A /* editor in Resources */ = {isa = PBXBuildFile; fileRef = 4C3AADBF7952DB71D2C6E6B8 /* editor */; };
+		AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9477A8E6F29B57D41C54708 /* GitRepo.swift */; };
+		C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */; };
+		C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 559EB9869DE461F1461FAE24 /* SwiftTerm */; };
+		E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F26C2BA450A548A43F335D2 /* Tokenizer.swift */; };
+		FB2B1A4FC633BF8B1BF9BF55 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLCommand.swift; sourceTree = "<group>"; };
+		123B426355E92471BC4F0796 /* SSHConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfig.swift; sourceTree = "<group>"; };
+		1E38296F173038059B88B9A2 /* TerminalContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainer.swift; sourceTree = "<group>"; };
+		35B48B2FA74A39FD3D45151C /* EditorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorScreen.swift; sourceTree = "<group>"; };
+		38A6CCF8C69F84680140B1C6 /* HostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsView.swift; sourceTree = "<group>"; };
+		3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4327DCA24632381F84315B0E /* TextCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextCommands.swift; sourceTree = "<group>"; };
+		472EA149190C7C58CC34DA91 /* SSHCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHCommands.swift; sourceTree = "<group>"; };
+		4C3AADBF7952DB71D2C6E6B8 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = dabterm/Resources/editor; sourceTree = SOURCE_ROOT; };
+		5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitCommands.swift; sourceTree = "<group>"; };
+		5A7063D11E3F50DDF3E9AAB5 /* DabCrypto */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DabCrypto; path = Packages/DabCrypto; sourceTree = SOURCE_ROOT; };
+		6F26C2BA450A548A43F335D2 /* Tokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
+		86DC88AD0561520B447A70E0 /* KeyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBar.swift; sourceTree = "<group>"; };
+		8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCommands.swift; sourceTree = "<group>"; };
+		9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSession.swift; sourceTree = "<group>"; };
+		976DB65985DB778DB7C52CE6 /* DNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNS.swift; sourceTree = "<group>"; };
+		A8373181A3E2F984A457A192 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
+		A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRegistry.swift; sourceTree = "<group>"; };
+		B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		B9477A8E6F29B57D41C54708 /* GitRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRepo.swift; sourceTree = "<group>"; };
+		BE69F9F038C664BCFDABF690 /* DabtermApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DabtermApp.swift; sourceTree = "<group>"; };
+		C1CC58D405C3F44BBBF6487A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
+		C5E6F1115C567E76CB92C59F /* ShellCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellCommands.swift; sourceTree = "<group>"; };
+		D3B8A4CB47B7261E8ECB279C /* GitHubClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubClient.swift; sourceTree = "<group>"; };
+		D8F44612343221C54A754E77 /* ShellIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellIO.swift; sourceTree = "<group>"; };
+		DC099E58B81A9C70320B7641 /* ICMP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICMP.swift; sourceTree = "<group>"; };
+		EB85ECAE14996B8FC81438D3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkCommands.swift; sourceTree = "<group>"; };
+		F890EB280BF50646CCA56D58 /* dabterm.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = dabterm.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeys.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D1303573229B8AED92D393B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */,
+				80B0DAFA03490A83210537C8 /* Citadel in Frameworks */,
+				56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0D76200F2C0BE9300DF1D4CC /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4C3AADBF7952DB71D2C6E6B8 /* editor */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		157730B7B23FF1AB041E590C /* Git */ = {
+			isa = PBXGroup;
+			children = (
+				D3B8A4CB47B7261E8ECB279C /* GitHubClient.swift */,
+				B9477A8E6F29B57D41C54708 /* GitRepo.swift */,
+				B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */,
+			);
+			path = Git;
+			sourceTree = "<group>";
+		};
+		1E6548C1BDCCE3FBBBB3EB84 = {
+			isa = PBXGroup;
+			children = (
+				71A6FC67BA1EC828A26E8608 /* dabterm */,
+				9788D4DDE75EE1B49B2BD969 /* Packages */,
+				ADEF290E56D8ABF2067B043D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		21DD8D41AB270C6308B1A080 /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */,
+			);
+			path = Crypto;
+			sourceTree = "<group>";
+		};
+		38A3037BDFCE07F566D9353A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BE69F9F038C664BCFDABF690 /* DabtermApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4751C378C528C746EB6F47A0 /* SSH */ = {
+			isa = PBXGroup;
+			children = (
+				38A6CCF8C69F84680140B1C6 /* HostsView.swift */,
+				472EA149190C7C58CC34DA91 /* SSHCommands.swift */,
+				123B426355E92471BC4F0796 /* SSHConfig.swift */,
+				FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */,
+			);
+			path = SSH;
+			sourceTree = "<group>";
+		};
+		58AB58D5AF0F2729B3CA3E9A /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				86DC88AD0561520B447A70E0 /* KeyBar.swift */,
+				1E38296F173038059B88B9A2 /* TerminalContainer.swift */,
+			);
+			path = Terminal;
+			sourceTree = "<group>";
+		};
+		5BFE3F7A611ED13F4F42A6B7 /* Shell */ = {
+			isa = PBXGroup;
+			children = (
+				A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */,
+				D8F44612343221C54A754E77 /* ShellIO.swift */,
+				9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */,
+				6F26C2BA450A548A43F335D2 /* Tokenizer.swift */,
+				CC6CD450A1FCC71191539F38 /* Commands */,
+			);
+			path = Shell;
+			sourceTree = "<group>";
+		};
+		71A6FC67BA1EC828A26E8608 /* dabterm */ = {
+			isa = PBXGroup;
+			children = (
+				EB85ECAE14996B8FC81438D3 /* Info.plist */,
+				38A3037BDFCE07F566D9353A /* App */,
+				21DD8D41AB270C6308B1A080 /* Crypto */,
+				F32762EC4AA165F00D3B6A57 /* Editor */,
+				92A8AEDAA1B1DB7377752236 /* Files */,
+				157730B7B23FF1AB041E590C /* Git */,
+				B3D30CB38DD750B07F040A84 /* Network */,
+				0D76200F2C0BE9300DF1D4CC /* Resources */,
+				872C37CEB8799AEA78288416 /* Settings */,
+				5BFE3F7A611ED13F4F42A6B7 /* Shell */,
+				4751C378C528C746EB6F47A0 /* SSH */,
+				58AB58D5AF0F2729B3CA3E9A /* Terminal */,
+			);
+			path = dabterm;
+			sourceTree = "<group>";
+		};
+		872C37CEB8799AEA78288416 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		92A8AEDAA1B1DB7377752236 /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				C1CC58D405C3F44BBBF6487A /* Workspace.swift */,
+			);
+			path = Files;
+			sourceTree = "<group>";
+		};
+		9788D4DDE75EE1B49B2BD969 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				5A7063D11E3F50DDF3E9AAB5 /* DabCrypto */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		ADEF290E56D8ABF2067B043D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F890EB280BF50646CCA56D58 /* dabterm.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B3D30CB38DD750B07F040A84 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				976DB65985DB778DB7C52CE6 /* DNS.swift */,
+				DC099E58B81A9C70320B7641 /* ICMP.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		CC6CD450A1FCC71191539F38 /* Commands */ = {
+			isa = PBXGroup;
+			children = (
+				8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */,
+				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
+				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
+				C5E6F1115C567E76CB92C59F /* ShellCommands.swift */,
+				4327DCA24632381F84315B0E /* TextCommands.swift */,
+			);
+			path = Commands;
+			sourceTree = "<group>";
+		};
+		F32762EC4AA165F00D3B6A57 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				35B48B2FA74A39FD3D45151C /* EditorScreen.swift */,
+				A8373181A3E2F984A457A192 /* EditorWebView.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DA9180862CD569E625A08397 /* dabterm */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8E2142D706E829D1BADAF923 /* Build configuration list for PBXNativeTarget "dabterm" */;
+			buildPhases = (
+				6B0E7C47A4C4AA3855F32043 /* Sources */,
+				A87483A106F53F0FD6474B0E /* Resources */,
+				D1303573229B8AED92D393B3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = dabterm;
+			packageProductDependencies = (
+				559EB9869DE461F1461FAE24 /* SwiftTerm */,
+				9EE43C9E8D45C681F73DB8D3 /* Citadel */,
+				8806238848ABF3CC1EE8F885 /* DabCrypto */,
+			);
+			productName = dabterm;
+			productReference = F890EB280BF50646CCA56D58 /* dabterm.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FFA86DFF62A0BE0D3040CEEC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					DA9180862CD569E625A08397 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = BB48489D154E9A793324BA86 /* Build configuration list for PBXProject "dabterm" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1E6548C1BDCCE3FBBBB3EB84;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B2B02482DAE768393371C2ED /* XCRemoteSwiftPackageReference "Citadel" */,
+				6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				41B63D5F27F304B216FDB4FF /* XCLocalSwiftPackageReference "Packages/DabCrypto" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = ADEF290E56D8ABF2067B043D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DA9180862CD569E625A08397 /* dabterm */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A87483A106F53F0FD6474B0E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A8790ABBA9ED3A0091D2014A /* editor in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6B0E7C47A4C4AA3855F32043 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				11E36D7E44641ABCA736D0D5 /* CommandRegistry.swift in Sources */,
+				97E59425A05D2C2347FCACCD /* DNS.swift in Sources */,
+				3AC303134C4DEC7FC81598C5 /* DabtermApp.swift in Sources */,
+				915BC5BF58132AF177D18F89 /* EditorScreen.swift in Sources */,
+				79D400A8743762C71C830F2D /* EditorWebView.swift in Sources */,
+				27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */,
+				74C1FD2365AC5A7ECC4935D5 /* GitCommands.swift in Sources */,
+				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
+				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
+				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
+				A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */,
+				4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */,
+				97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */,
+				7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */,
+				039E7C40978B03E85D093010 /* OpenSSLCommand.swift in Sources */,
+				3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */,
+				2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */,
+				C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */,
+				FB2B1A4FC633BF8B1BF9BF55 /* SettingsView.swift in Sources */,
+				51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */,
+				1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */,
+				966380A5CA689BE0E8B630F9 /* ShellSession.swift in Sources */,
+				05A2421EB0D7482DDF603133 /* TerminalContainer.swift in Sources */,
+				55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */,
+				E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */,
+				33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0D8582CBC717EA9CA7CF89E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		666E0012B21749BB90B74FA8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = dabterm/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dab.dabterm;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D466C4DEB5B038520CEA99E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E154AD19D40EB53B856FCCF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = dabterm/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_BUNDLE_IDENTIFIER = com.dab.dabterm;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8E2142D706E829D1BADAF923 /* Build configuration list for PBXNativeTarget "dabterm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				666E0012B21749BB90B74FA8 /* Debug */,
+				E154AD19D40EB53B856FCCF2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BB48489D154E9A793324BA86 /* Build configuration list for PBXProject "dabterm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D8582CBC717EA9CA7CF89E5 /* Debug */,
+				D466C4DEB5B038520CEA99E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		41B63D5F27F304B216FDB4FF /* XCLocalSwiftPackageReference "Packages/DabCrypto" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DabCrypto;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.99.0;
+			};
+		};
+		B2B02482DAE768393371C2ED /* XCRemoteSwiftPackageReference "Citadel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orlandos-nl/Citadel";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		559EB9869DE461F1461FAE24 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6A8D267E7F94668EB1D00A1C /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+		8806238848ABF3CC1EE8F885 /* DabCrypto */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DabCrypto;
+		};
+		9EE43C9E8D45C681F73DB8D3 /* Citadel */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B2B02482DAE768393371C2ED /* XCRemoteSwiftPackageReference "Citadel" */;
+			productName = Citadel;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FFA86DFF62A0BE0D3040CEEC /* Project object */;
+}
