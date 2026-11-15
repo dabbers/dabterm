@@ -131,7 +131,8 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
-        .padding(.bottom, keyboardInset.bottom + flex.floatingHeight)
+        .ignoresSafeArea(.keyboard, edges: flex.floatingInset > 0 ? .bottom : [])
+        .padding(.bottom, keyboardInset.bottom + flex.floatingInset)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.

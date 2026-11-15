@@ -11,8 +11,9 @@ final class FlexKeyBar: ObservableObject {
 
     /// True while the hinge is partially open and the bar should float.
     @Published private(set) var active = false
-    /// Height currently occupied by the floating bar (0 when docked normally); the root view pads by this.
-    @Published private(set) var floatingHeight: CGFloat = 0
+    /// Distance from the window's bottom edge to the top of the floating bar (0 when docked normally).
+    /// The root view ignores the keyboard safe area and pads by this instead, so content reaches the bar.
+    @Published private(set) var floatingInset: CGFloat = 0
 
     private var hingeStates: [ObjectIdentifier: Bool] = [:]
     private var keyboardFrame: CGRect = .null   // screen coordinates
@@ -114,7 +115,8 @@ final class FlexKeyBar: ObservableObject {
         }
         bar.content.frame = container.bounds
         window.bringSubviewToFront(container)
-        if floatingHeight != h { floatingHeight = h }
+        let inset = window.bounds.maxY - container.frame.minY
+        if floatingInset != inset { floatingInset = inset }
         let msg = "float bar at y=\(Int(container.frame.minY)) kbTop=\(Int(kb.minY)) windowH=\(Int(window.bounds.height))"
         if msg != lastLayoutMsg { lastLayoutMsg = msg; log(msg) }
     }
@@ -126,7 +128,7 @@ final class FlexKeyBar: ObservableObject {
             bar.addSubview(bar.content)
         }
         container.removeFromSuperview()
-        if floatingHeight != 0 { floatingHeight = 0 }
+        if floatingInset != 0 { floatingInset = 0 }
     }
 
     // MARK: Keyboard window inspection (read-only; frames of the system keyboard's own views)
