@@ -124,7 +124,7 @@ final class KeyboardInset: ObservableObject {
 struct RootView: View {
     @EnvironmentObject var model: AppModel
     @StateObject private var keyboardInset = KeyboardInset()
-    @ObservedObject private var flex = FlexKeyBar.shared
+    @ObservedObject private var deck = LaptopDeck.shared
     var body: some View {
         TabView(selection: $model.tab) {
             TerminalTabView().tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
@@ -134,9 +134,11 @@ struct RootView: View {
         }
         .tint(.cyan)
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .padding(.bottom, flex.floatingInset > 0 ? flex.floatingInset : keyboardInset.bottom)
+        .padding(.bottom, deck.inset > 0 ? deck.inset : keyboardInset.bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
+            // The laptop deck's strip and key routing follow the visible tab.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { LaptopDeck.shared.refresh() }
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.
             if tab == .terminal { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { model.activeSession?.focusTerminal?() } }
             else { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }

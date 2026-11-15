@@ -34,7 +34,7 @@ final class KeyBar: UIInputView {
     required init?(coder: NSCoder) { fatalError() }
     override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: frame.height) }
 
-    /// Everything visible lives in `content`, a plain view that FlexKeyBar can lift out of this
+    /// Everything visible lives in `content`, a plain view that LaptopDeck can lift out of this
     /// input view and float elsewhere. The UIInputView itself must stay where UIKit put it.
     let content = UIView()
 

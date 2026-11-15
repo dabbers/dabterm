@@ -34,23 +34,50 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
         installColors(Self.palette)
         keyBar = KeyBar(target: self)
         backgroundColor = .black
-        FlexKeyBar.shared.observe(self)
+        if let bar = keyBar {
+            LaptopDeck.shared.register(self, bar: bar) { [weak self] key, mods in self?.handleSoftKey(key, mods) }
+        }
+    }
+
+    /// Soft keyboard (laptop deck) keys to terminal bytes.
+    private func handleSoftKey(_ key: SoftKey, _ mods: SoftKey.Modifiers) {
+        switch key {
+        case .text(let s):
+            if mods.contains(.ctrl), let c = s.uppercased().utf8.first, c >= 0x40, c <= 0x5f { inject([c - 0x40]); return }
+            if mods.contains(.alt) { inject([0x1b] + Array(s.utf8)); return }
+            insertText(s)   // goes through the key bar's sticky ctrl/alt too
+        case .backspace: inject([0x7f])
+        case .enter: inject([0x0d])
+        case .esc: inject([0x1b])
+        case .tab: inject([0x09])
+        case .up: inject(Array("\u{1b}[A".utf8)); case .down: inject(Array("\u{1b}[B".utf8))
+        case .right: inject(Array("\u{1b}[C".utf8)); case .left: inject(Array("\u{1b}[D".utf8))
+        }
+    }
+
+    override func becomeFirstResponder() -> Bool {
+        let ok = super.becomeFirstResponder()
+        if ok { LaptopDeck.shared.activate(host: self) }
+        return ok
+    }
+
+    /// While the laptop deck owns the lower half, an empty input view keeps the system keyboard away.
+    override var inputView: UIView? {
+        get { LaptopDeck.shared.active ? LaptopDeck.emptyInputView : nil }
+        set { }
     }
 
     /// The key bar docks above the keyboard as an accessory view, except on a half-open foldable,
-    /// where FlexKeyBar floats it above the keyboard on the lower panel instead (see FlexKeyBar).
+    /// where the laptop deck shows it on the lower panel instead (see LaptopDeck).
     private var keyBar: KeyBar?
     override var inputAccessoryView: UIView? {
-        get {
-            guard let keyBar else { return nil }
-            if FlexKeyBar.shared.active { FlexKeyBar.shared.show(keyBar, owner: self); return nil }
-            return keyBar
-        }
+        get { LaptopDeck.shared.active ? nil : keyBar }
         set { keyBar = newValue as? KeyBar }
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        LaptopDeck.shared.refresh()
         if !started, bounds.width > 10 {
             started = true
             session?.start()

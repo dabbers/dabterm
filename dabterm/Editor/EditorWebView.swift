@@ -131,21 +131,42 @@ enum EditorKeyBarInstaller {
             }
         }
         bars[ObjectIdentifier(wv)] = bar
-        MainActor.assumeIsolated { FlexKeyBar.shared.observe(wv) }
+        MainActor.assumeIsolated {
+            LaptopDeck.shared.register(wv, bar: bar) { key, mods in
+                Task { @MainActor in
+                    switch key {
+                    case .text(let s):
+                        if mods.contains(.ctrl) { break }   // no shortcuts in the editor from the deck
+                        controller.insert(s)
+                    case .backspace: controller.key("backspace")
+                    case .enter: controller.key("enter")
+                    case .esc: controller.key("esc")
+                    case .tab: controller.key("tab")
+                    case .up: controller.key("up"); case .down: controller.key("down")
+                    case .left: controller.key("left"); case .right: controller.key("right")
+                    }
+                }
+            }
+        }
         let newClassName = "DabWKContentWithBar_\(String(describing: type(of: target)))"
         if let cls = NSClassFromString(newClassName) { object_setClass(target, cls); return }
         guard let newClass = objc_allocateClassPair(type(of: target), newClassName, 0) else { return }
         let block: @convention(block) (UIView) -> UIView? = { view in
             var v: UIView? = view
             while let x = v, !(x is WKWebView) { v = x.superview }
-            guard let bar = (v as? WKWebView).flatMap({ bars[ObjectIdentifier($0)] }) else { return nil }
+            guard let wv = v as? WKWebView, let bar = bars[ObjectIdentifier(wv)] else { return nil }
             return MainActor.assumeIsolated {
-                if FlexKeyBar.shared.active { FlexKeyBar.shared.show(bar, owner: view); return nil }
-                return bar
+                LaptopDeck.shared.activate(host: wv)
+                return LaptopDeck.shared.active ? nil : bar
             }
         }
         let imp = imp_implementationWithBlock(block)
         class_addMethod(newClass, NSSelectorFromString("inputAccessoryView"), imp, "@@:")
+        // While the laptop deck is up, an empty input view keeps the system keyboard away from the editor.
+        let inputBlock: @convention(block) (UIView) -> UIView? = { _ in
+            MainActor.assumeIsolated { LaptopDeck.shared.active ? LaptopDeck.emptyInputView : nil }
+        }
+        class_addMethod(newClass, NSSelectorFromString("inputView"), imp_implementationWithBlock(inputBlock), "@@:")
         objc_registerClassPair(newClass)
         object_setClass(target, newClass)
     }

@@ -3,7 +3,7 @@
 import { EditorState, Compartment, EditorSelection } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
          drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightSpecialChars } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, selectAll } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, selectAll, insertNewlineAndIndent, deleteCharBackward } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, openSearchPanel, search } from "@codemirror/search";
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput, syntaxHighlighting, defaultHighlightStyle, StreamLanguage, indentUnit } from "@codemirror/language";
@@ -113,7 +113,7 @@ function makeState(doc, path) {
 
 const view = new EditorView({ state: makeState("", null), parent: document.getElementById("editor") });
 
-const keyMap = { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp", down: "ArrowDown", home: "Home", end: "End", esc: "Escape" };
+const keyMap = { left: "ArrowLeft", right: "ArrowRight", up: "ArrowUp", down: "ArrowDown", home: "Home", end: "End", esc: "Escape", backspace: "Backspace", enter: "Enter" };
 
 // ---- Select mode: touch-drag selects text instead of scrolling; arrows extend the selection.
 let selectMode = false;
@@ -170,6 +170,8 @@ window.dabterm = {
   key(name) {
     if (selectMode && ["left", "right", "up", "down", "home", "end"].includes(name)) { extend(name); return; }
     if (name === "tab") { indentWithTab.run(view); view.focus(); return; }
+    if (name === "enter") { insertNewlineAndIndent(view); view.focus(); return; }
+    if (name === "backspace") { deleteCharBackward(view); view.focus(); return; }
     view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", { key: keyMap[name] || name, bubbles: true }));
     view.focus();
   },
