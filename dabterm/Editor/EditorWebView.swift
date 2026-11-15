@@ -12,6 +12,7 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
     @Published var tabs: [URL] = []
     private(set) var ready = false
     private var pendingOpen: URL? = nil
+    private var pendingLine: Int? = nil
     var onSaved: ((URL) -> Void)?
 
     lazy var webView: WKWebView = {
@@ -38,7 +39,7 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         case "ready":
             ready = true
             applySettings()
-            if let p = pendingOpen { pendingOpen = nil; open(p) }
+            if let p = pendingOpen { pendingOpen = nil; open(p, line: pendingLine); pendingLine = nil }
         case "dirty": dirty = true
         case "cursor": if let l = body["line"] as? Int, let c = body["col"] as? Int { cursor = (l, c) }
         case "save":
@@ -50,14 +51,15 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         }
     }
 
-    func open(_ url: URL) {
-        guard ready else { pendingOpen = url; return }
+    func open(_ url: URL, line: Int? = nil) {
+        guard ready else { pendingOpen = url; pendingLine = line; return }
         if dirty, let cur = openFile, cur != url { save() }
         guard let data = FileManager.default.contents(atPath: url.path) else { status = "Cannot read \(url.lastPathComponent)"; return }
         guard let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else { status = "Binary file"; return }
         openFile = url; dirty = false
         if !tabs.contains(url) { tabs.append(url) }
         call("dabterm.open(\(js(url.path)), \(js(text)))")
+        if let line { call("dabterm.goto(\(line))") }
         status = Workspace.display(url)
     }
     func close(_ url: URL) {

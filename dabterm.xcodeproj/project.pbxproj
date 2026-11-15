@@ -33,6 +33,7 @@
 		A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC099E58B81A9C70320B7641 /* ICMP.swift */; };
 		A8790ABBA9ED3A0091D2014A /* editor in Resources */ = {isa = PBXBuildFile; fileRef = 4C3AADBF7952DB71D2C6E6B8 /* editor */; };
 		AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9477A8E6F29B57D41C54708 /* GitRepo.swift */; };
+		B0E376735305CA5E148E8FFC /* JSCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */; };
 		C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */; };
 		C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 559EB9869DE461F1461FAE24 /* SwiftTerm */; };
 		E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F26C2BA450A548A43F335D2 /* Tokenizer.swift */; };
@@ -51,6 +52,7 @@
 		4C3AADBF7952DB71D2C6E6B8 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = dabterm/Resources/editor; sourceTree = SOURCE_ROOT; };
 		5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitCommands.swift; sourceTree = "<group>"; };
 		5A7063D11E3F50DDF3E9AAB5 /* DabCrypto */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DabCrypto; path = Packages/DabCrypto; sourceTree = SOURCE_ROOT; };
+		6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSCommand.swift; sourceTree = "<group>"; };
 		6F26C2BA450A548A43F335D2 /* Tokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
 		86DC88AD0561520B447A70E0 /* KeyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBar.swift; sourceTree = "<group>"; };
 		8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCommands.swift; sourceTree = "<group>"; };
@@ -226,6 +228,7 @@
 			children = (
 				8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */,
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
+				6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */,
 				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
 				C5E6F1115C567E76CB92C59F /* ShellCommands.swift */,
 				4327DCA24632381F84315B0E /* TextCommands.swift */,
@@ -333,6 +336,7 @@
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
 				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
 				A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */,
+				B0E376735305CA5E148E8FFC /* JSCommand.swift in Sources */,
 				4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */,
 				97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */,
 				7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */,

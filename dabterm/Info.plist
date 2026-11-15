@@ -39,10 +39,37 @@
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
+      <key>CFBundleTypeName</key><string>Source code</string>
+      <key>LSHandlerRank</key><string>Default</string>
+      <key>LSItemContentTypes</key>
+      <array><string>public.source-code</string><string>public.shell-script</string><string>public.script</string><string>public.json</string><string>public.yaml</string><string>public.xml</string><string>net.daringfireball.markdown</string></array>
+    </dict>
+    <dict>
       <key>CFBundleTypeName</key><string>Text</string>
       <key>LSHandlerRank</key><string>Alternate</string>
       <key>LSItemContentTypes</key>
-      <array><string>public.text</string><string>public.source-code</string><string>public.data</string></array>
+      <array><string>public.text</string><string>public.plain-text</string><string>public.log</string></array>
+    </dict>
+    <dict>
+      <key>CFBundleTypeName</key><string>Any file</string>
+      <key>LSHandlerRank</key><string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array><string>public.item</string><string>public.data</string><string>public.content</string><string>public.folder</string></array>
+    </dict>
+  </array>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key><string>com.dab.dabterm</string>
+      <key>CFBundleURLSchemes</key><array><string>dabterm</string></array>
+    </dict>
+  </array>
+  <key>UTImportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key><string>public.yaml</string>
+      <key>UTTypeConformsTo</key><array><string>public.text</string></array>
+      <key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>yml</string><string>yaml</string></array></dict>
     </dict>
   </array>
 </dict>

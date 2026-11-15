@@ -65,10 +65,10 @@ struct EditorScreen: View {
         }
         .onAppear {
             tree.root = model.editorFolder; tree.refresh()
-            if let r = model.editorRequest { editor.open(r); model.editorRequest = nil }
+            if let r = model.editorRequest { editor.open(r, line: model.editorLine); model.editorRequest = nil; model.editorLine = nil }
         }
         .onChange(of: model.editorFolder) { _, f in tree.root = f; tree.refresh() }
-        .onChange(of: model.editorRequest) { _, r in if let r { editor.open(r); model.editorRequest = nil; showTree = false } }
+        .onChange(of: model.editorRequest) { _, r in if let r { editor.open(r, line: model.editorLine); model.editorRequest = nil; model.editorLine = nil; showTree = false } }
         .onChange(of: model.editorFontSize) { _, _ in editor.applySettings() }
         .onChange(of: model.editorWrap) { _, _ in editor.applySettings() }
         .onAppear { editor.onSaved = { _ in tree.refresh() } }

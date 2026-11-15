@@ -27,7 +27,7 @@ final class ShellSession: ObservableObject {
 
     let registry = CommandRegistry.shared
     /// Requests to the UI (open editor, etc.)
-    var openInEditor: ((URL) -> Void)?
+    var openInEditor: ((URL, Int?) -> Void)?
 
     static let historyURL = Workspace.root.appendingPathComponent(".dsh_history")
 

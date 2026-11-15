@@ -15,6 +15,7 @@ struct HelpCommand: Command {
             ("Network", ["ping", "traceroute", "dig", "host", "curl", "wget", "http", "nc", "portscan", "ifconfig", "whois"]),
             ("Crypto", ["openssl", "shasum", "md5", "uuid", "ssh-keygen"]),
             ("Remote", ["ssh", "scp", "ssh-copy-id", "git", "gh"]),
+            ("Scripting", ["js", "node", "sh"]),
             ("Shell", ["help", "clear", "history", "env", "export", "unset", "alias", "which", "date", "uname", "sleep", "sh", "exit"]),
         ]
         ctx.print("\u{1b}[1mdabterm built-in commands\u{1b}[0m  (help <cmd> for usage; .sh files in ~/bin run by name)\n")
@@ -160,11 +161,29 @@ struct ShCommand: Command {
 }
 
 struct EditCommand: Command {
-    let name = "edit"; let usage = "edit file|folder"; let summary = "open in the code editor tab"
+    let name = "edit"; let usage = "edit [file[:line]]... | edit folder   (aliases: vim vi nano code)"
+    let summary = "open files or a folder in the editor tab"
     func run(_ ctx: CommandContext) async throws -> Int32 {
-        let url = ctx.path(ctx.args.first ?? ".")
-        if !FileManager.default.fileExists(atPath: url.path) { try Data().write(to: url) }
-        await MainActor.run { ctx.session.openInEditor?(url) }
+        let args = ctx.args.isEmpty ? ["."] : ctx.args
+        for a in args {
+            var spec = a
+            var line: Int? = nil
+            // file:line or file:line:col
+            if let m = spec.range(of: #":\d+(:\d+)?$"#, options: .regularExpression) {
+                line = Int(spec[m].dropFirst().split(separator: ":").first ?? "")
+                spec = String(spec[..<m.lowerBound])
+            }
+            let url = ctx.path(spec)
+            if !FileManager.default.fileExists(atPath: url.path) {
+                if spec.hasSuffix("/") { try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true) }
+                else {
+                    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try Data().write(to: url)
+                    ctx.printErr("created \(Workspace.display(url))")
+                }
+            }
+            await MainActor.run { ctx.session.openInEditor?(url, line) }
+        }
         return 0
     }
 }

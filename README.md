@@ -22,10 +22,17 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
+| Scripting | `js` / `node` (JavaScriptCore), `sh` |
 | Shell | `help clear history env export unset alias which date uname sleep sh` |
 
 `ping` and `traceroute` use ICMP datagram sockets (no root needed on iOS). `dig` is a small DNS
 client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
+
+**JavaScript.** `js file.js [args]`, `node -e 'code'`, `node -p expr`, piped stdin, or a REPL. Runs on
+the system JavaScriptCore engine (App Store safe: nothing is downloaded or JIT-compiled) with a small
+Node-flavoured runtime: `require()` for local files, JSON and plain CommonJS `node_modules`, `fs`
+(sync API), `path`, `os`, `util`, `events`, `process.argv/env/exit/stdout`, timers, `fetch`,
+`TextEncoder`, `btoa`. Not Node: no npm native modules, no `http.createServer`, no streams.
 
 **openssl.** A real libcrypto (OpenSSL 3) behind an `openssl`-compatible CLI subset:
 `genrsa`, `genpkey` (RSA/EC/Ed25519), `ecparam -genkey`, `req` (`-new`, `-x509`, `-addext`, SANs),
@@ -37,6 +44,12 @@ client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
 IdentityFile, wildcards, Include), tries keys in `~/ssh`, falls back to password, trust-on-first-use
 `known_hosts`. Interactive PTY with resize, remote commands (`ssh host uptime`), `scp` over SFTP,
 `ssh-copy-id`, `ssh-keygen -t ed25519`. The SSH tab lists hosts for one-tap connect and manages keys.
+
+**Opening files.** `edit file`, `edit file:line`, `edit folder` (also `vim`, `vi`, `nano`, `code`).
+dabterm registers as a handler for source, text and generic files, so it appears in the share sheet
+and in Files' "Open in…". Files from outside the sandbox are copied to `~/inbox`. URL scheme for
+Shortcuts and other apps: `dabterm://open?path=~/x.md&line=10`, `dabterm://run?cmd=ls`,
+`dabterm://ssh?host=myserver`.
 
 **Editor.** CodeMirror 6 in a web view with syntax highlighting for ~25 languages, search/replace,
 undo/redo, go-to-line, line wrapping, tabs, a file tree with create/rename/delete/share, and a
@@ -136,7 +149,9 @@ conflicting C structs; keeping OpenSSL behind an implementation-only import avoi
 - Mosh-style reconnect, tmux-aware session restore
 - `openssl` SKI/AKI extensions and `s_client -starttls`
 - iPad: split view terminal + editor, external keyboard shortcuts, Stage Manager multi-window
-- `python`/`node` via WebAssembly runtimes
+- Python 3.13 via the official iOS build (python.org ships one; App Store allowed, +~30 MB)
+- A real Node is not feasible (needs JIT and fork); next steps are a WASI runtime for
+  clang-compiled tools (a-Shell style) and QuickJS for ES modules
 
 ## License
 

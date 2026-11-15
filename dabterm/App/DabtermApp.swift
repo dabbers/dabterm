@@ -18,6 +18,7 @@ final class AppModel: ObservableObject {
     @Published var sessions: [ShellSession] = []
     @Published var activeSession: ShellSession?
     @Published var editorRequest: URL? = nil
+    @Published var editorLine: Int? = nil
     @Published var editorFolder: URL = Workspace.home
     @AppStorage("fontSize") var fontSize: Double = 13
     @AppStorage("editorFontSize") var editorFontSize: Double = 14
@@ -32,13 +33,62 @@ final class AppModel: ObservableObject {
 
     func newSession() {
         let s = ShellSession()
-        s.openInEditor = { [weak self] url in
-            guard let self else { return }
-            if Workspace.isDirectory(url) { self.editorFolder = url } else { self.editorFolder = url.deletingLastPathComponent(); self.editorRequest = url }
-            self.tab = .editor
-        }
+        s.openInEditor = { [weak self] url, line in self?.open(url, line: line) }
         sessions.append(s); activeSession = s
     }
+    /// Open a file (jumping to `line`) or a folder (as the workspace root) in the editor tab.
+    func open(_ url: URL, line: Int? = nil) {
+        if Workspace.isDirectory(url) { editorFolder = url }
+        else {
+            // keep the current workspace root if the file is inside it
+            if !url.path.hasPrefix(editorFolder.path + "/") { editorFolder = url.deletingLastPathComponent() }
+            editorLine = line
+            editorRequest = url
+        }
+        tab = .editor
+    }
+
+    /// Handles files handed to us by Files, Safari "Open in…", the share sheet, or dabterm:// URLs.
+    /// Files outside our sandbox are copied into ~/inbox (we can't keep security-scoped access
+    /// across launches, and the shell needs a real path).
+    func handleIncoming(_ url: URL) {
+        if url.scheme == "dabterm" {
+            // dabterm://open?path=~/x.txt&line=3   dabterm://run?cmd=ls
+            let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let q = Dictionary(uniqueKeysWithValues: (comps?.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+            switch url.host {
+            case "open": if let p = q["path"] { open(Workspace.resolve(p, cwd: Workspace.home), line: q["line"].flatMap(Int.init)) }
+            case "run": if let c = q["cmd"] { runInTerminal(c) }
+            case "ssh": if let h = q["host"] { runInTerminal("ssh \(shellQuote(h))") }
+            default: break
+            }
+            return
+        }
+        guard url.isFileURL else { return }
+        if url.standardizedFileURL.path.hasPrefix(Workspace.root.path) { open(url.standardizedFileURL); return }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let inbox = Workspace.root.appendingPathComponent("inbox", isDirectory: true)
+        try? FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
+        var dest = inbox.appendingPathComponent(url.lastPathComponent)
+        var n = 1
+        while FileManager.default.fileExists(atPath: dest.path) {
+            dest = inbox.appendingPathComponent("\(url.deletingPathExtension().lastPathComponent)-\(n).\(url.pathExtension)"); n += 1
+        }
+        var coordError: NSError? = nil
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordError) { readURL in
+            try? FileManager.default.copyItem(at: readURL, to: dest)
+        }
+        guard FileManager.default.fileExists(atPath: dest.path) else { return }
+        if Workspace.isDirectory(dest) { open(dest) }
+        else if isTextLike(dest) { open(dest) }
+        else { runInTerminal("cd ~/inbox && ls -la") }
+    }
+    private func isTextLike(_ url: URL) -> Bool {
+        guard let d = FileManager.default.contents(atPath: url.path) else { return false }
+        return d.isEmpty || String(data: d.prefix(4096), encoding: .utf8) != nil
+    }
+
     func close(_ s: ShellSession) {
         sessions.removeAll { $0 === s }
         if sessions.isEmpty { newSession() } else if activeSession === s { activeSession = sessions.last }
@@ -60,6 +110,7 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
+        .onOpenURL { url in model.handleIncoming(url) }
     }
 }
 

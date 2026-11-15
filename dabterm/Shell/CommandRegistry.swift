@@ -17,7 +17,7 @@ final class CommandRegistry {
             // shell
             HelpCommand(), ClearCommand(), HistoryCommand(), EnvCommand(), ExportCommand(), UnsetCommand(), WhichCommand(),
             DateCommand(), UnameCommand(), SleepCommand(), TrueCommand(), FalseCommand(), ExitCommand(), ShCommand(),
-            EditCommand(), OpenCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
+            EditCommand(), OpenCommand(), JSCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
             // network
             PingCommand(), TracerouteCommand(), DigCommand(), HostCommand(), CurlCommand(), WgetCommand(), NcCommand(),
             IfconfigCommand(), WhoisCommand(), PortscanCommand(), HttpCommand(),
@@ -38,6 +38,7 @@ final class CommandRegistry {
         commands["vi"] = AliasedCommand(name: "vi", target: "edit", prefix: [])
         commands["nano"] = AliasedCommand(name: "nano", target: "edit", prefix: [])
         commands["code"] = AliasedCommand(name: "code", target: "edit", prefix: [])
+        commands["node"] = AliasedCommand(name: "node", target: "js", prefix: [])
     }
 
     func command(named name: String) -> Command? { commands[name] }
