@@ -1,4 +1,6 @@
 import Foundation
+import CryptoKit
+import CommonCrypto
 import JavaScriptCore
 
 /// `js` / `node`: run JavaScript with the system JavaScriptCore engine (no JIT needed, App Store
@@ -268,6 +270,7 @@ final class JSRuntime {
         globalThis.atob = s => { const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'; let out = '', bits = 0, acc = 0; for (const ch of s.replace(/=+$/, '')) { acc = (acc << 6) | chars.indexOf(ch); bits += 6; if (bits >= 8) { bits -= 8; out += String.fromCharCode((acc >> bits) & 255); } } return decodeURIComponent(escape(out)); };
         """#)
         for (k, g) in [("path", "__path"), ("os", "__os"), ("util", "__util"), ("events", "__events")] { builtins[k] = c.objectForKeyedSubscript(g) }
+        installCrypto(c)
         c.setObject(makeRequire(dir: ctx.cwd), forKeyedSubscript: "require" as NSString)
 
         // fetch (async, resolved by the timer loop)
@@ -346,5 +349,129 @@ final class JSRuntime {
 
     func inspect(_ v: JSValue) -> String {
         context.objectForKeyedSubscript("__inspect")?.call(withArguments: [v])?.toString() ?? v.toString()
+    }
+}
+
+
+// MARK: - crypto (CryptoKit + CommonCrypto)
+extension JSRuntime {
+    fileprivate static func bytes(_ v: JSValue) -> [UInt8] {
+        if v.isString { return Array(v.toString().utf8) }
+        if let arr = v.toArray() as? [NSNumber] { return arr.map { UInt8(truncating: $0) } }
+        return []
+    }
+    fileprivate static func hash(_ alg: String, _ data: [UInt8]) -> [UInt8]? {
+        switch alg.lowercased().replacingOccurrences(of: "-", with: "") {
+        case "md5": return Array(Insecure.MD5.hash(data: data))
+        case "sha1": return Array(Insecure.SHA1.hash(data: data))
+        case "sha256": return Array(SHA256.hash(data: data))
+        case "sha384": return Array(SHA384.hash(data: data))
+        case "sha512": return Array(SHA512.hash(data: data))
+        default: return nil
+        }
+    }
+    fileprivate static func hmac(_ alg: String, key: [UInt8], _ data: [UInt8]) -> [UInt8]? {
+        let k = SymmetricKey(data: key)
+        switch alg.lowercased().replacingOccurrences(of: "-", with: "") {
+        case "md5": return Array(HMAC<Insecure.MD5>.authenticationCode(for: data, using: k))
+        case "sha1": return Array(HMAC<Insecure.SHA1>.authenticationCode(for: data, using: k))
+        case "sha256": return Array(HMAC<SHA256>.authenticationCode(for: data, using: k))
+        case "sha384": return Array(HMAC<SHA384>.authenticationCode(for: data, using: k))
+        case "sha512": return Array(HMAC<SHA512>.authenticationCode(for: data, using: k))
+        default: return nil
+        }
+    }
+    fileprivate static func pbkdf2(_ pw: [UInt8], _ salt: [UInt8], _ iter: Int, _ len: Int, _ digest: String) -> [UInt8]? {
+        let prf: CCPseudoRandomAlgorithm
+        switch digest.lowercased().replacingOccurrences(of: "-", with: "") {
+        case "sha1": prf = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1)
+        case "sha256": prf = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
+        case "sha384": prf = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA384)
+        case "sha512": prf = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
+        default: return nil
+        }
+        var out = [UInt8](repeating: 0, count: len)
+        let rc = pw.withUnsafeBufferPointer { p in
+            salt.withUnsafeBufferPointer { s in
+                CCKeyDerivationPBKDF(CCPBKDFAlgorithm(kCCPBKDF2), p.baseAddress.map { UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self) }, p.count,
+                                     s.baseAddress, s.count, prf, UInt32(iter), &out, len)
+            }
+        }
+        return rc == kCCSuccess ? out : nil
+    }
+
+    func installCrypto(_ c: JSContext) {
+        let hashFn: @convention(block) (String, JSValue) -> [UInt8]? = { alg, data in JSRuntime.hash(alg, JSRuntime.bytes(data)) }
+        c.setObject(hashFn, forKeyedSubscript: "__cryptoHash" as NSString)
+        let hmacFn: @convention(block) (String, JSValue, JSValue) -> [UInt8]? = { alg, key, data in JSRuntime.hmac(alg, key: JSRuntime.bytes(key), JSRuntime.bytes(data)) }
+        c.setObject(hmacFn, forKeyedSubscript: "__cryptoHmac" as NSString)
+        let randFn: @convention(block) (Int) -> [UInt8] = { n in (0..<max(0, n)).map { _ in UInt8.random(in: 0...255) } }
+        c.setObject(randFn, forKeyedSubscript: "__cryptoRandom" as NSString)
+        let pbkdf: @convention(block) (JSValue, JSValue, Int, Int, String) -> [UInt8]? = { pw, salt, iter, len, d in JSRuntime.pbkdf2(JSRuntime.bytes(pw), JSRuntime.bytes(salt), iter, len, d) }
+        c.setObject(pbkdf, forKeyedSubscript: "__cryptoPbkdf2" as NSString)
+        c.evaluateScript(#"""
+        (() => {
+          const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+          const unhex = s => Uint8Array.from((s.match(/../g) || []).map(h => parseInt(h, 16)));
+          const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+          const b64 = b => { let out = ''; for (let i = 0; i < b.length; i += 3) { const n = (b[i] << 16) | ((b[i + 1] || 0) << 8) | (b[i + 2] || 0); out += B64[n >> 18] + B64[(n >> 12) & 63] + (i + 1 < b.length ? B64[(n >> 6) & 63] : '=') + (i + 2 < b.length ? B64[n & 63] : '='); } return out; };
+          const unb64 = s => { s = s.replace(/-/g, '+').replace(/_/g, '/').replace(/[^A-Za-z0-9+/]/g, ''); const out = []; let bits = 0, acc = 0; for (const ch of s) { acc = (acc << 6) | B64.indexOf(ch); bits += 6; if (bits >= 8) { bits -= 8; out.push((acc >> bits) & 255); } } return Uint8Array.from(out); };
+          const utf8 = s => new TextEncoder().encode(s);
+          class Buffer extends Uint8Array {
+            static from(v, enc) {
+              if (typeof v === 'string') {
+                const e = (enc || 'utf8').toLowerCase().replace('-', '');
+                return new Buffer(e === 'hex' ? unhex(v) : e === 'base64' || e === 'base64url' ? unb64(v) : e === 'latin1' || e === 'binary' ? Uint8Array.from(v, ch => ch.charCodeAt(0) & 255) : utf8(v));
+              }
+              if (v instanceof ArrayBuffer) return new Buffer(new Uint8Array(v));
+              return new Buffer(Uint8Array.from(v));
+            }
+            static alloc(n, fill = 0) { const b = new Buffer(n); b.fill(fill); return b; }
+            static isBuffer(b) { return b instanceof Buffer; }
+            static concat(list) { const n = list.reduce((a, b) => a + b.length, 0); const out = new Buffer(n); let o = 0; for (const b of list) { out.set(b, o); o += b.length; } return out; }
+            toString(enc) {
+              const e = (enc || 'utf8').toLowerCase().replace('-', '');
+              if (e === 'hex') return hex(this);
+              if (e === 'base64') return b64(this);
+              if (e === 'base64url') return b64(this).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+              if (e === 'latin1' || e === 'binary') return String.fromCharCode(...this);
+              return new TextDecoder().decode(this);
+            }
+            toJSON() { return { type: 'Buffer', data: Array.from(this) }; }
+            equals(o) { return this.length === o.length && this.every((x, i) => x === o[i]); }
+          }
+          globalThis.Buffer = Buffer;
+          const toBytes = (d, enc) => typeof d === 'string' ? Buffer.from(d, enc) : Buffer.from(d);
+          const wrap = (bytes, enc) => { if (bytes == null) throw new Error('Unsupported algorithm'); const b = Buffer.from(bytes); return enc ? b.toString(enc) : b; };
+          class Hash {
+            constructor(alg, key) { this.alg = alg; this.key = key; this.chunks = []; }
+            update(d, enc) { this.chunks.push(toBytes(d, enc)); return this; }
+            digest(enc) {
+              const data = Buffer.concat(this.chunks);
+              return wrap(this.key === undefined ? __cryptoHash(this.alg, Array.from(data)) : __cryptoHmac(this.alg, Array.from(this.key), Array.from(data)), enc);
+            }
+          }
+          const randomBytes = n => Buffer.from(__cryptoRandom(n));
+          const randomUUID = () => { const b = randomBytes(16); b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80; const h = hex(b); return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`; };
+          const getRandomValues = arr => { const r = __cryptoRandom(arr.byteLength); new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength).set(r); return arr; };
+          const subtleName = a => (typeof a === 'string' ? a : a.name).toLowerCase().replace('-', '');
+          const subtle = {
+            digest: async (alg, data) => Buffer.from(__cryptoHash(subtleName(alg), Array.from(new Uint8Array(data))) || []).buffer,
+          };
+          globalThis.__crypto = {
+            createHash: alg => new Hash(alg),
+            createHmac: (alg, key) => new Hash(alg, toBytes(key)),
+            randomBytes, randomUUID, getRandomValues,
+            randomInt: (a, b) => { if (b === undefined) { b = a; a = 0; } const r = __cryptoRandom(6); let n = 0; for (const x of r) n = n * 256 + x; return a + (n % (b - a)); },
+            timingSafeEqual: (a, b) => { if (a.length !== b.length) throw new Error('Input buffers must have the same byte length'); let d = 0; for (let i = 0; i < a.length; i++) d |= a[i] ^ b[i]; return d === 0; },
+            pbkdf2Sync: (pw, salt, iter, len, digest) => wrap(__cryptoPbkdf2(toBytes(pw), toBytes(salt), iter, len, digest)),
+            getHashes: () => ['md5', 'sha1', 'sha256', 'sha384', 'sha512'],
+            webcrypto: { subtle, randomUUID, getRandomValues },
+            subtle,
+          };
+          globalThis.crypto = { subtle, randomUUID, getRandomValues };
+        })();
+        """#)
+        builtins["crypto"] = c.objectForKeyedSubscript("__crypto")
     }
 }

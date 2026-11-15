@@ -32,8 +32,21 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
         allowMouseReporting = false
         optionAsMetaKey = true
         installColors(Self.palette)
-        inputAccessoryView = KeyBar(target: self)
+        keyBar = KeyBar(target: self)
         backgroundColor = .black
+        FlexKeyBar.shared.observe(self)
+    }
+
+    /// The key bar docks above the keyboard as an accessory view, except on a half-open foldable,
+    /// where FlexKeyBar floats it above the keyboard on the lower panel instead (see FlexKeyBar).
+    private var keyBar: KeyBar?
+    override var inputAccessoryView: UIView? {
+        get {
+            guard let keyBar else { return nil }
+            if FlexKeyBar.shared.active { FlexKeyBar.shared.show(keyBar, owner: self); return nil }
+            return keyBar
+        }
+        set { keyBar = newValue as? KeyBar }
     }
 
     override func layoutSubviews() {
@@ -121,7 +134,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
             UIPasteboard.general.string = text
             showToast("Copied \(text.count) characters")
             dabSelectNone()
-            if let bar = inputAccessoryView as? KeyBar { bar.setSelectMode(false) }
+            if let bar = keyBar { bar.setSelectMode(false) }
             selectMode = false; selectPan?.isEnabled = false
         } else {
             UIPasteboard.general.string = dabAllText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -131,7 +144,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
 
     /// Soft-keyboard text while Ctrl/Alt is sticky becomes a control sequence.
     override func insertText(_ text: String) {
-        if let bar = inputAccessoryView as? KeyBar, let bytes = bar.transform(text) { session?.feed(bytes: bytes); return }
+        if let bar = keyBar, let bytes = bar.transform(text) { session?.feed(bytes: bytes); return }
         super.insertText(text)
     }
 

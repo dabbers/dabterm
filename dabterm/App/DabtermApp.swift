@@ -122,6 +122,7 @@ final class KeyboardInset: ObservableObject {
 struct RootView: View {
     @EnvironmentObject var model: AppModel
     @StateObject private var keyboardInset = KeyboardInset()
+    @ObservedObject private var flex = FlexKeyBar.shared
     var body: some View {
         TabView(selection: $model.tab) {
             TerminalTabView().tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
@@ -130,7 +131,7 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
-        .padding(.bottom, keyboardInset.bottom)
+        .padding(.bottom, keyboardInset.bottom + flex.floatingHeight)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.

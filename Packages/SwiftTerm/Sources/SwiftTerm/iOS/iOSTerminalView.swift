@@ -1669,7 +1669,7 @@ open class TerminalView: UIScrollView, UITextInputTraits, UIKeyInput, UIScrollVi
         }
     }
     #else
-    public override var inputAccessoryView: UIView? {
+    open override var inputAccessoryView: UIView? {
         get { _inputAccessory }
         set {
             _inputAccessory = newValue

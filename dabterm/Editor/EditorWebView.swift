@@ -131,13 +131,18 @@ enum EditorKeyBarInstaller {
             }
         }
         bars[ObjectIdentifier(wv)] = bar
+        MainActor.assumeIsolated { FlexKeyBar.shared.observe(wv) }
         let newClassName = "DabWKContentWithBar_\(String(describing: type(of: target)))"
         if let cls = NSClassFromString(newClassName) { object_setClass(target, cls); return }
         guard let newClass = objc_allocateClassPair(type(of: target), newClassName, 0) else { return }
         let block: @convention(block) (UIView) -> UIView? = { view in
             var v: UIView? = view
             while let x = v, !(x is WKWebView) { v = x.superview }
-            return (v as? WKWebView).flatMap { bars[ObjectIdentifier($0)] }
+            guard let bar = (v as? WKWebView).flatMap({ bars[ObjectIdentifier($0)] }) else { return nil }
+            return MainActor.assumeIsolated {
+                if FlexKeyBar.shared.active { FlexKeyBar.shared.show(bar, owner: view); return nil }
+                return bar
+            }
         }
         let imp = imp_implementationWithBlock(block)
         class_addMethod(newClass, NSSelectorFromString("inputAccessoryView"), imp, "@@:")
