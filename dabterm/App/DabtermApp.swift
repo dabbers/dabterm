@@ -128,17 +128,19 @@ final class KeyboardInset: ObservableObject {
             self?.hiding = true
             self?.bottom = 0
         }
-        // The notification's frame is only an estimate on a foldable; the docked key bar says where
-        // the keyboard really starts, so once it is on screen its position wins.
-        KeyBar.onPlaced = { [weak self] bar in
-            guard let self, !self.hiding, let w = bar.window, let app = UIApplication.keyWindow else { return }
-            let r = w.convert(bar.bounds, from: bar)
-            let bottomEdge = app.frame.maxY
-            guard r.height > 0, r.minY > 0, r.minY < bottomEdge else { return }
-            let v = max(0, bottomEdge - r.minY - app.safeAreaInsets.bottom)
-            if abs(v - self.bottom) > 0.5 {
-                self.bottom = v
-                HingeMonitor.shared.log("kb bar at \(r) window bottom=\(bottomEdge) inset=\(v)")
+        // Half a second after any keyboard change, record where things actually ended up.
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard let w = UIApplication.keyWindow, let root = w.rootViewController?.view else { return }
+                var line = "probe root=\(root.frame) rootSafe=\(root.safeAreaInsets) windowSafe=\(w.safeAreaInsets)"
+                if let fr = UIApplication.firstResponder as? UIView, let fw = fr.window {
+                    line += " responder=\(type(of: fr)) at \(fw.convert(fr.bounds, from: fr))"
+                }
+                if #available(iOS 27.1, *) {
+                    let div = root.reservedRegions(kind: .division, options: .includeInactive).map { "\($0.frame) active=\($0.isActive)" }
+                    line += " division=\(div)"
+                }
+                HingeMonitor.shared.log(line)
             }
         }
     }
