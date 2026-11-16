@@ -130,24 +130,28 @@ struct GitHubClient {
     static let clientID = "Iv23lisj2JHQ65xiz8Gd"
     /// False only for the placeholder a fork might leave in place.
     static var deviceFlowConfigured: Bool { !clientID.isEmpty && !clientID.contains("Placeholder") }
-    struct DeviceCode { let deviceCode: String; let userCode: String; let verificationURL: String; let interval: Int }
+    struct DeviceCode { let deviceCode: String; let userCode: String; let verificationURL: String; let interval: Int; let expiresIn: Int }
+    enum DevicePoll { case token(String), pending, slowDown, denied(String) }
     static func startDeviceFlow() async throws -> DeviceCode {
         var req = URLRequest(url: URL(string: "https://github.com/login/device/code")!)
         req.httpMethod = "POST"; req.setValue("application/json", forHTTPHeaderField: "Accept"); req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: ["client_id": clientID, "scope": "repo read:user"])
         let (d, _) = try await URLSession.shared.data(for: req)
         guard let j = try JSONSerialization.jsonObject(with: d) as? [String: Any], let dc = j["device_code"] as? String else { throw APIError(status: 0, message: "device flow unavailable: \(String(decoding: d, as: UTF8.self))") }
-        return DeviceCode(deviceCode: dc, userCode: j["user_code"] as? String ?? "", verificationURL: j["verification_uri"] as? String ?? "https://github.com/login/device", interval: j["interval"] as? Int ?? 5)
+        return DeviceCode(deviceCode: dc, userCode: j["user_code"] as? String ?? "", verificationURL: j["verification_uri"] as? String ?? "https://github.com/login/device", interval: j["interval"] as? Int ?? 5, expiresIn: j["expires_in"] as? Int ?? 900)
     }
-    static func pollDeviceFlow(_ code: DeviceCode) async throws -> String? {
+    static func pollDeviceFlow(_ code: DeviceCode) async throws -> DevicePoll {
         var req = URLRequest(url: URL(string: "https://github.com/login/oauth/access_token")!)
         req.httpMethod = "POST"; req.setValue("application/json", forHTTPHeaderField: "Accept"); req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: ["client_id": clientID, "device_code": code.deviceCode, "grant_type": "urn:ietf:params:oauth:grant-type:device_code"])
+        req.timeoutInterval = 20
         let (d, _) = try await URLSession.shared.data(for: req)
         let j = try JSONSerialization.jsonObject(with: d) as? [String: Any] ?? [:]
-        if let t = j["access_token"] as? String { return t }
-        let err = j["error"] as? String ?? ""
-        if err == "authorization_pending" || err == "slow_down" { return nil }
-        throw APIError(status: 0, message: j["error_description"] as? String ?? err)
+        if let t = j["access_token"] as? String { return .token(t) }
+        switch j["error"] as? String ?? "" {
+        case "authorization_pending": return .pending
+        case "slow_down": return .slowDown
+        case let e: return .denied(j["error_description"] as? String ?? e)
+        }
     }
 }

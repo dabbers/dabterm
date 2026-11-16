@@ -245,17 +245,36 @@ struct GhCommand: Command {
             do { code = try await GitHubClient.startDeviceFlow() }
             catch { throw CommandError("device flow failed (\(error)).\nAlternative: create a fine-grained token at github.com/settings/tokens and run\n  echo <token> | gh auth login --with-token\nor paste it in Settings → GitHub.") }
             ctx.print("! First copy your one-time code: \u{1b}[1m\(code.userCode)\u{1b}[0m\nOpen \(code.verificationURL) and enter the code. Opening Safari...")
+            // Safari takes the foreground; ask for background time so the polling continues while
+            // the code is being entered (iOS grants up to a few minutes).
+            let bgTask = await MainActor.run { UIApplication.shared.beginBackgroundTask(withName: "gh auth login") }
+            defer { Task { @MainActor in UIApplication.shared.endBackgroundTask(bgTask) } }
             await MainActor.run { UIPasteboard.general.string = code.userCode; if let u = URL(string: code.verificationURL) { UIApplication.shared.open(u) } }
-            for _ in 0..<60 {
+            // Poll until GitHub says yes, up to the code's lifetime (15 minutes). Network errors are
+            // expected here: the app is in the background while Safari shows the code page, and
+            // requests in flight get cut when it is suspended or resumed. Keep polling.
+            var interval = max(5, code.interval)
+            let deadline = Date().addingTimeInterval(TimeInterval(code.expiresIn))
+            var lastError: String? = nil
+            while Date() < deadline {
                 if Task.isCancelled { return 130 }
-                try await Task.sleep(nanoseconds: UInt64(max(5, code.interval)) * 1_000_000_000)
-                if let tok = try await GitHubClient.pollDeviceFlow(code) {
-                    Keychain.set(tok, for: Keychain.githubTokenKey)
-                    ctx.print("✓ Authentication complete. Logged in as \(try await GitHubClient(token: tok).viewer())"); return 0
-                }
+                try await Task.sleep(nanoseconds: UInt64(interval) * 1_000_000_000)
+                do {
+                    let r = try await GitHubClient.pollDeviceFlow(code)
+                    switch r {
+                    case .token(let tok):
+                        Keychain.set(tok, for: Keychain.githubTokenKey)
+                        ctx.print("\n✓ Authentication complete. Logged in as \(try await GitHubClient(token: tok).viewer())"); return 0
+                    case .pending: break
+                    case .slowDown: interval += 5
+                    case .denied(let why): throw CommandError("GitHub refused the login: \(why)")
+                    }
+                    lastError = nil
+                } catch let e as CommandError { throw e }
+                catch { lastError = ShellSession.describe(error) }
                 ctx.out.write(".")
             }
-            throw CommandError("timed out waiting for authorization")
+            throw CommandError("timed out waiting for authorization" + (lastError.map { " (last error: \($0))" } ?? ""))
         case ("auth", "status"):
             guard client.token != nil else { ctx.print("You are not logged into GitHub. Run `gh auth login`."); return 1 }
             ctx.print("✓ Logged in to github.com as \(try await client.viewer()) (token in Keychain)")
