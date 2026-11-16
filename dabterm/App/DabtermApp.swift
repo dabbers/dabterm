@@ -116,6 +116,7 @@ final class KeyboardInset: ObservableObject {
             // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
             guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
             self.bottom = min(frame.height, max(0, screen.bounds.height - frame.minY))
+            LaptopDeck.shared.debugLog("kb frame=\(frame) screen=\(screen.bounds.size) inset=\(self.bottom)")
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
     }
@@ -133,8 +134,10 @@ struct RootView: View {
             SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
+        // Pad for the keyboard (or the laptop deck) ourselves, then ignore SwiftUI's own keyboard
+        // avoidance *outside* the padding; the other way round both subtract the keyboard height.
         .padding(.bottom, deck.inset > 0 ? deck.inset : keyboardInset.bottom)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
             // The laptop deck's strip and key routing follow the visible tab.

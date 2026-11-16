@@ -68,6 +68,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
     /// The key bar docks above the keyboard as an accessory view, except on a half-open foldable,
     /// where the laptop deck shows it on the lower panel instead (see LaptopDeck).
     private var keyBar: KeyBar?
+    private var loggedSize = CGSize.zero
     override var inputAccessoryView: UIView? {
         get { LaptopDeck.shared.active ? nil : keyBar }
         set { keyBar = newValue as? KeyBar }
@@ -76,6 +77,10 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
     override func layoutSubviews() {
         super.layoutSubviews()
         LaptopDeck.shared.refresh()
+        if let w = window, bounds.size != loggedSize {
+            loggedSize = bounds.size
+            LaptopDeck.shared.debugLog("term frame=\(convert(bounds, to: w)) window=\(w.bounds.size) safe=\(w.safeAreaInsets)")
+        }
         if !started, bounds.width > 10 {
             started = true
             session?.start()
@@ -178,7 +183,7 @@ final class DabTerminalView: TerminalView, TerminalViewDelegate, OutputSink, UIG
         let b = Array(data)
         DispatchQueue.main.async { self.session?.feed(bytes: b) }
     }
-    func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) { session?.resize(cols: newCols, rows: newRows) }
+    func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) { LaptopDeck.shared.debugLog("term grid \(newCols)x\(newRows)"); session?.resize(cols: newCols, rows: newRows) }
     func setTerminalTitle(source: TerminalView, title: String) { session?.title = title }
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
     func scrolled(source: TerminalView, position: Double) {}

@@ -174,6 +174,7 @@ final class LaptopDeck: ObservableObject {
         return nil
     }
 
+    func debugLog(_ s: String) { log(s) }
     private func log(_ s: String) {
         guard hadHinge else { return }
         let line = "\(ISO8601DateFormatter().string(from: Date())) \(s)\n"
