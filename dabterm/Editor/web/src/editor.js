@@ -3,7 +3,7 @@
 import { EditorState, Compartment, EditorSelection } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
          drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightSpecialChars } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap, indentWithTab, undo, redo, selectAll, insertNewlineAndIndent, deleteCharBackward } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, indentWithTab, insertTab, undo, redo, selectAll, insertNewlineAndIndent, deleteCharBackward } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, openSearchPanel, search } from "@codemirror/search";
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete";
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput, syntaxHighlighting, defaultHighlightStyle, StreamLanguage, indentUnit } from "@codemirror/language";
@@ -171,7 +171,8 @@ window.dabterm = {
   selectLine() { const s = view.state.selection.main; const a = view.state.doc.lineAt(s.from), b = view.state.doc.lineAt(s.to); const to = b.number < view.state.doc.lines ? view.state.doc.line(b.number + 1).from : b.to; view.dispatch({ selection: EditorSelection.single(a.from, to) }); },
   key(name) {
     if (selectMode && ["left", "right", "up", "down", "home", "end"].includes(name)) { extend(name); return; }
-    if (name === "tab") { indentWithTab.run(view); focus(); return; }
+    // A tab at the cursor (indents the selection if there is one), not "indent this line".
+    if (name === "tab") { insertTab(view); focus(); return; }
     if (name === "enter") { insertNewlineAndIndent(view); focus(); return; }
     if (name === "backspace") { deleteCharBackward(view); focus(); return; }
     view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", { key: keyMap[name] || name, bubbles: true }));
