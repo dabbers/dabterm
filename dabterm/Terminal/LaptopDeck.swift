@@ -129,6 +129,13 @@ final class LaptopDeck: ObservableObject {
         return UIApplication.keyWindow
     }
 
+    /// The app's tabs, shown at the foot of the deck while split (the system tab bar hides then).
+    func setTabs(_ items: [DeckTabBar.Item], onSelect: @escaping (Int) -> Void) {
+        deckView.tabBar.setItems(items)
+        deckView.tabBar.onSelect = onSelect
+    }
+    func setSelectedTab(_ i: Int) { deckView.tabBar.setSelected(i) }
+
     private func layout() {
         guard active, let window = hostWindow() else { hide(); return }
         let h = floor(window.bounds.height / 2)
@@ -202,6 +209,7 @@ extension UIResponder {
 /// The flat half: the key bar strip right under the hinge, then the soft keyboard.
 final class LaptopDeckView: UIView {
     let keyboard = SoftKeyboardView()
+    let tabBar = DeckTabBar()
     private let stripHolder = UIView()
     private weak var strip: UIView?
     private weak var stripOwner: KeyBar?
@@ -213,6 +221,8 @@ final class LaptopDeckView: UIView {
         stripHolder.backgroundColor = UIColor(white: 0.11, alpha: 1)
         addSubview(stripHolder)
         addSubview(keyboard)
+        tabBar.isHidden = true
+        addSubview(tabBar)
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -268,10 +278,50 @@ final class LaptopDeckView: UIView {
         let bottom = bounds.height - safeAreaInsets.bottom
         stripHolder.frame = CGRect(x: 0, y: 0, width: bounds.width, height: stripHeight)
         strip?.frame = stripHolder.bounds
-        let remaining = bottom - stripHeight - 6
-        // Fill most of the panel so keys are thumb-sized; leave a little dead space at the bottom edge.
-        let kbHeight = min(remaining, max(keyboard.preferredHeight, floor(remaining * 0.8)))
+        // The app's tab bar moves down here while split (it would waste the upper half), and the
+        // keyboard stretches to fill everything between the strip and it: no dead space.
+        let tabHeight: CGFloat = tabBar.isHidden ? 0 : 44
+        tabBar.frame = CGRect(x: 0, y: bottom - tabHeight, width: bounds.width, height: tabHeight)
+        let kbHeight = max(0, bottom - stripHeight - 6 - tabHeight - 4)
         keyboard.frame = CGRect(x: safeAreaInsets.left, y: stripHeight + 6, width: bounds.width - safeAreaInsets.left - safeAreaInsets.right, height: kbHeight)
+    }
+}
+
+/// The app's tabs, drawn as a slim icon row at the foot of the deck while split.
+final class DeckTabBar: UIView {
+    struct Item { let title: String; let image: String }
+    var onSelect: ((Int) -> Void)?
+    private var buttons: [UIButton] = []
+    private(set) var selected = 0
+
+    func setItems(_ items: [Item]) {
+        buttons.forEach { $0.removeFromSuperview() }
+        buttons = items.enumerated().map { i, item in
+            var cfg = UIButton.Configuration.plain()
+            cfg.image = UIImage(systemName: item.image, withConfiguration: UIImage.SymbolConfiguration(pointSize: 15, weight: .medium))
+            cfg.title = item.title
+            cfg.imagePlacement = .leading
+            cfg.imagePadding = 5
+            cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { var a = $0; a.font = UIFont.systemFont(ofSize: 12, weight: .medium); return a }
+            let b = UIButton(configuration: cfg)
+            b.addAction(UIAction { [weak self] _ in self?.onSelect?(i) }, for: .touchUpInside)
+            addSubview(b)
+            return b
+        }
+        isHidden = items.isEmpty
+        setSelected(selected)
+        setNeedsLayout()
+    }
+    func setSelected(_ i: Int) {
+        selected = i
+        for (j, b) in buttons.enumerated() { b.tintColor = j == i ? .systemCyan : UIColor(white: 0.6, alpha: 1) }
+    }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard !buttons.isEmpty else { return }
+        let w = bounds.width / CGFloat(buttons.count)
+        for (i, b) in buttons.enumerated() { b.frame = CGRect(x: CGFloat(i) * w, y: 0, width: w, height: bounds.height) }
     }
 }
 

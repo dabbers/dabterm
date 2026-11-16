@@ -123,23 +123,35 @@ final class KeyboardInset: ObservableObject {
 }
 
 struct RootView: View {
+    private static let tabs: [AppModel.Tab] = [.terminal, .editor, .hosts, .settings]
     @EnvironmentObject var model: AppModel
     @StateObject private var keyboardInset = KeyboardInset()
     @ObservedObject private var deck = LaptopDeck.shared
     var body: some View {
+        // While the laptop deck is up the system tab bar hides (it would eat the upper half) and the
+        // deck draws the same tabs at its foot.
+        let bar: Visibility = deck.active ? .hidden : .visible
         TabView(selection: $model.tab) {
-            TerminalTabView().tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
-            EditorScreen().tabItem { Label("Editor", systemImage: "chevron.left.forwardslash.chevron.right") }.tag(AppModel.Tab.editor)
-            HostsView().tabItem { Label("SSH", systemImage: "network") }.tag(AppModel.Tab.hosts)
-            SettingsView().tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
+            TerminalTabView().toolbar(bar, for: .tabBar).tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
+            EditorScreen().toolbar(bar, for: .tabBar).tabItem { Label("Editor", systemImage: "chevron.left.forwardslash.chevron.right") }.tag(AppModel.Tab.editor)
+            HostsView().toolbar(bar, for: .tabBar).tabItem { Label("SSH", systemImage: "network") }.tag(AppModel.Tab.hosts)
+            SettingsView().toolbar(bar, for: .tabBar).tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
         }
         .tint(.cyan)
+        .onAppear {
+            LaptopDeck.shared.setTabs([.init(title: "Terminal", image: "terminal"), .init(title: "Editor", image: "chevron.left.forwardslash.chevron.right"),
+                                       .init(title: "SSH", image: "network"), .init(title: "Settings", image: "gearshape")]) { i in
+                model.tab = Self.tabs[i]
+            }
+            LaptopDeck.shared.setSelectedTab(Self.tabs.firstIndex(of: model.tab) ?? 0)
+        }
         // Pad for the keyboard (or the laptop deck) ourselves, then ignore SwiftUI's own keyboard
         // avoidance *outside* the padding; the other way round both subtract the keyboard height.
         .padding(.bottom, deck.inset > 0 ? deck.inset : keyboardInset.bottom)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
+            LaptopDeck.shared.setSelectedTab(Self.tabs.firstIndex(of: tab) ?? 0)
             // The laptop deck's strip and key routing follow the visible tab.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { LaptopDeck.shared.refresh() }
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.
