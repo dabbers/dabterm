@@ -22,6 +22,9 @@ struct GitHubClient {
             let msg = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["message"] as? String ?? String(decoding: data, as: UTF8.self)
             if http.statusCode == 401 { throw APIError(status: 401, message: "bad credentials — run `gh auth login`") }
             if http.statusCode == 404, token == nil { throw APIError(status: 404, message: "\(msg) (private repo? run `gh auth login`)") }
+            if http.statusCode == 404, path.hasPrefix("repos/") {
+                throw APIError(status: 404, message: "\(msg). The repository does not exist, or the token cannot see it: a login through the dabterm GitHub App only reaches repositories the app is installed on. Install it for this account or repository on github.com (Settings → Applications → Installed GitHub Apps), or log in with a token instead.")
+            }
             throw APIError(status: http.statusCode, message: msg)
         }
         return (data, http)
