@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import WebKit
 import UIKit
@@ -14,6 +15,7 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
     private var pendingOpen: URL? = nil
     private var pendingLine: Int? = nil
     var onSaved: ((URL) -> Void)?
+    private var splitObserver: AnyCancellable?
 
     lazy var webView: WKWebView = {
         let cfg = WKWebViewConfiguration()
@@ -22,6 +24,7 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         cfg.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
         let wv = WKWebView(frame: .zero, configuration: cfg)
         wv.navigationDelegate = self
+        splitObserver = LaptopDeck.shared.$active.sink { [weak self] on in self?.call("dabterm.setSplit(\(on))") }
         wv.isOpaque = false; wv.backgroundColor = UIColor(red: 0.157, green: 0.173, blue: 0.204, alpha: 1)
         wv.scrollView.bounces = false
         wv.scrollView.contentInsetAdjustmentBehavior = .never

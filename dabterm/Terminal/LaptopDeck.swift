@@ -113,8 +113,27 @@ final class LaptopDeck: ObservableObject {
             }
         }
         if active {
-            layout()
-            if let fr = UIApplication.firstResponder, fr !== deckView { dismissKeyboards(); _ = deckView.becomeFirstResponder() }
+            let fr = UIApplication.firstResponder
+            if let fr, fr !== deckView, !isHosted(fr) {
+                // Something that is not ours (the new-file name field, say) wants the system keyboard:
+                // let it have it. iOS shrinks the window to the upper half meanwhile; the deck steps
+                // aside and comes back when that responder resigns.
+                if deckView.superview != nil { hide(); log("deck suspended for \(type(of: fr))") }
+            } else {
+                if deckView.superview == nil { log("deck resumed") }
+                layout()
+                if fr !== deckView { dismissKeyboards(); _ = deckView.becomeFirstResponder() }
+            }
+        }
+    }
+
+    /// Whether a responder is one of the host views or lives inside one.
+    private func isHosted(_ r: UIResponder) -> Bool {
+        guard var v = r as? UIView else { return false }
+        while true {
+            if hosts[ObjectIdentifier(v)] != nil { return true }
+            guard let s = v.superview else { return false }
+            v = s
         }
     }
 

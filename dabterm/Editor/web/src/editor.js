@@ -128,6 +128,19 @@ function dragSelect(phase, x, y) {
   else if (phase === "move" && dragAnchor != null) { view.dispatch({ selection: EditorSelection.single(dragAnchor, pos), scrollIntoView: true }); }
   else if (phase === "end") { dragAnchor = null; }
 }
+// While the laptop deck is up the web view is never first responder, so WebKit's own tap-to-place-caret
+// does nothing; place it ourselves from the tap position (only when unfocused, so normal taps,
+// double-tap word selection and drags keep their native behaviour).
+let tapStart = null;
+view.contentDOM.addEventListener("pointerdown", e => { tapStart = { x: e.clientX, y: e.clientY }; }, { passive: true });
+view.contentDOM.addEventListener("pointerup", e => {
+  const start = tapStart; tapStart = null;
+  if (selectMode || view.hasFocus || !start) return;
+  if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
+  const pos = posAt(e.clientX, e.clientY);
+  if (pos != null) view.dispatch({ selection: EditorSelection.single(pos) });
+}, { passive: true });
+
 function extend(dir) {
   const sel = view.state.selection.main;
   const line = view.state.doc.lineAt(sel.head);
@@ -145,7 +158,13 @@ function extend(dir) {
   view.dispatch({ selection: EditorSelection.single(sel.anchor, head), scrollIntoView: true });
 }
 
+// While the laptop deck is up the web view must not hold an input session: iOS would float the
+// form accessory (prev/next/done) over the deck. Keep the element blurred and never re-focus it.
+let split = false;
+function focus() { if (!split) view.focus(); }
+
 window.dabterm = {
+  setSplit(on) { split = on; if (on) { view.contentDOM.blur(); if (document.activeElement) document.activeElement.blur(); } else focus(); },
   open(path, content) {
     currentPath = path; dirty = false;
     view.setState(makeState(content, path));
@@ -158,9 +177,9 @@ window.dabterm = {
   setDark(on) { settings.dark = on; view.dispatch({ effects: theme.reconfigure(on ? oneDark : []) }); },
   undo() { undo(view); },
   redo() { redo(view); },
-  selectAll() { selectAll(view); view.focus(); },
+  selectAll() { selectAll(view); focus(); },
   find() { openSearchPanel(view); },
-  insert(text) { view.dispatch(view.state.replaceSelection(text)); view.focus(); },
+  insert(text) { view.dispatch(view.state.replaceSelection(text)); focus(); },
   setSelectMode(on) { selectMode = on; dragAnchor = null; if (!on) { const h = view.state.selection.main.head; view.dispatch({ selection: EditorSelection.single(h) }); } },
   dragSelect,
   selectedText() { const s = view.state.selection.main; return view.state.sliceDoc(s.from, s.to); },
@@ -169,17 +188,17 @@ window.dabterm = {
   selectLine() { const s = view.state.selection.main; const a = view.state.doc.lineAt(s.from), b = view.state.doc.lineAt(s.to); const to = b.number < view.state.doc.lines ? view.state.doc.line(b.number + 1).from : b.to; view.dispatch({ selection: EditorSelection.single(a.from, to) }); },
   key(name) {
     if (selectMode && ["left", "right", "up", "down", "home", "end"].includes(name)) { extend(name); return; }
-    if (name === "tab") { indentWithTab.run(view); view.focus(); return; }
-    if (name === "enter") { insertNewlineAndIndent(view); view.focus(); return; }
-    if (name === "backspace") { deleteCharBackward(view); view.focus(); return; }
+    if (name === "tab") { indentWithTab.run(view); focus(); return; }
+    if (name === "enter") { insertNewlineAndIndent(view); focus(); return; }
+    if (name === "backspace") { deleteCharBackward(view); focus(); return; }
     view.contentDOM.dispatchEvent(new KeyboardEvent("keydown", { key: keyMap[name] || name, bubbles: true }));
-    view.focus();
+    focus();
   },
-  focus() { view.focus(); },
+  focus() { focus(); },
   goto(line) {
     const l = Math.max(1, Math.min(line, view.state.doc.lines));
     view.dispatch({ selection: { anchor: view.state.doc.line(l).from }, scrollIntoView: true });
-    view.focus();
+    focus();
   }
 };
 

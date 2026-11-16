@@ -116,8 +116,12 @@ final class KeyboardInset: ObservableObject {
             // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
             guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
             // Our padding sits above the bottom safe area, which the keyboard covers: take it off.
-            let safe = UIApplication.keyWindow?.safeAreaInsets.bottom ?? 0
-            self.bottom = max(0, min(frame.height, max(0, screen.bounds.height - frame.minY)) - safe)
+            // Measure against the window, not the screen: half-open, iOS shrinks the window to the
+            // upper half while a system keyboard is up, and only the overlap matters.
+            let window = UIApplication.keyWindow
+            let safe = window?.safeAreaInsets.bottom ?? 0
+            let bottomEdge = window?.frame.maxY ?? screen.bounds.height
+            self.bottom = max(0, min(frame.height, max(0, bottomEdge - frame.minY)) - safe)
             LaptopDeck.shared.debugLog("kb frame=\(frame) screen=\(screen.bounds.size) inset=\(self.bottom)")
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
@@ -144,21 +148,21 @@ struct RootView: View {
     @StateObject private var keyboardInset = KeyboardInset()
     @ObservedObject private var deck = LaptopDeck.shared
     var body: some View {
-        // While the laptop deck is up the system tab bar hides (it would eat the upper half) and the
-        // deck draws the same tabs at its foot.
-        let bar: Visibility = deck.active ? .hidden : .visible
-        TabView(selection: $model.tab) {
-            TerminalTabView().toolbar(bar, for: .tabBar).tabItem { Label("Terminal", systemImage: "terminal") }.tag(AppModel.Tab.terminal)
-            EditorScreen().toolbar(bar, for: .tabBar).tabItem { Label("Editor", systemImage: "chevron.left.forwardslash.chevron.right") }.tag(AppModel.Tab.editor)
-            HostsView().toolbar(bar, for: .tabBar).tabItem { Label("SSH", systemImage: "network") }.tag(AppModel.Tab.hosts)
-            SettingsView().toolbar(bar, for: .tabBar).tabItem { Label("Settings", systemImage: "gearshape") }.tag(AppModel.Tab.settings)
+        // The system tab bar is never shown: iOS 26 hides it under the keyboard and floats it as a
+        // big pill otherwise. We draw our own slim one above the keyboard; while the laptop deck is
+        // up, the deck draws the same tabs at its foot instead.
+        VStack(spacing: 0) {
+            TabView(selection: $model.tab) {
+                TerminalTabView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.terminal)
+                EditorScreen().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.editor)
+                HostsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.hosts)
+                SettingsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.settings)
+            }
+            if !deck.active { AppTabBar(selection: $model.tab) }
         }
         .tint(.cyan)
         .onAppear {
-            LaptopDeck.shared.setTabs([.init(title: "Terminal", image: "terminal"), .init(title: "Editor", image: "chevron.left.forwardslash.chevron.right"),
-                                       .init(title: "SSH", image: "network"), .init(title: "Settings", image: "gearshape")]) { i in
-                model.tab = Self.tabs[i]
-            }
+            LaptopDeck.shared.setTabs(AppTabBar.items.map { .init(title: $0.title, image: $0.image) }) { i in model.tab = Self.tabs[i] }
             LaptopDeck.shared.setSelectedTab(Self.tabs.firstIndex(of: model.tab) ?? 0)
         }
         // Pad for the keyboard (or the laptop deck) ourselves, then ignore SwiftUI's own keyboard
@@ -259,5 +263,35 @@ enum SmokeTest {
             }
             sink.write("\nDONE\n")
         }
+    }
+}
+
+/// The app's tabs as a slim row, drawn above the keyboard instead of the system tab bar.
+struct AppTabBar: View {
+    struct Item { let tab: AppModel.Tab; let title: String; let image: String }
+    static let items: [Item] = [
+        Item(tab: .terminal, title: "Terminal", image: "terminal"),
+        Item(tab: .editor, title: "Editor", image: "chevron.left.forwardslash.chevron.right"),
+        Item(tab: .hosts, title: "SSH", image: "network"),
+        Item(tab: .settings, title: "Settings", image: "gearshape"),
+    ]
+    @Binding var selection: AppModel.Tab
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Self.items, id: \.tab) { item in
+                Button { selection = item.tab } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: item.image).font(.system(size: 15, weight: .medium))
+                        Text(item.title).font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(selection == item.tab ? Color.cyan : Color(white: 0.6))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .background(Color(white: 0.07))
+        .overlay(alignment: .top) { Rectangle().fill(Color(white: 0.2)).frame(height: 0.5) }
     }
 }
