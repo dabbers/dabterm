@@ -34,6 +34,15 @@ final class KeyBar: UIInputView {
     required init?(coder: NSCoder) { fatalError() }
     override var intrinsicContentSize: CGSize { CGSize(width: UIView.noIntrinsicMetric, height: frame.height) }
 
+    /// Called whenever a key bar is laid out inside a window. Docked on the keyboard as its accessory,
+    /// its top edge is exactly where the visible keyboard starts, which the keyboard notifications
+    /// do not reliably say on a foldable (they report padded frames during posture changes).
+    nonisolated(unsafe) static var onPlaced: ((KeyBar) -> Void)?
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if window != nil { Self.onPlaced?(self) }
+    }
+
     /// Everything visible lives in `content`, a plain view that LaptopDeck can lift out of this
     /// input view and float elsewhere. The UIInputView itself must stay where UIKit put it.
     let content = UIView()

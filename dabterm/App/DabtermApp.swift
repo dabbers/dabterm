@@ -115,10 +115,26 @@ final class KeyboardInset: ObservableObject {
             // computed in one place (SwiftUI's avoidance and the floating bar's padding used to stack).
             // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
             guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
-            self.bottom = min(frame.height, max(0, screen.bounds.height - frame.minY))
+            // Our padding sits above the bottom safe area, which the keyboard covers: take it off.
+            let safe = UIApplication.keyWindow?.safeAreaInsets.bottom ?? 0
+            self.bottom = max(0, min(frame.height, max(0, screen.bounds.height - frame.minY)) - safe)
             LaptopDeck.shared.debugLog("kb frame=\(frame) screen=\(screen.bounds.size) inset=\(self.bottom)")
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
+        // The notification's frame is only an estimate on a foldable; the docked key bar says where
+        // the keyboard really starts, so once it is on screen its position wins.
+        KeyBar.onPlaced = { [weak self] bar in
+            guard let self, let w = bar.window else { return }
+            let r = w.convert(bar.bounds, from: bar)
+            let screenH = w.screen.bounds.height
+            guard r.height > 0, r.minY > 0, r.minY < screenH, LaptopDeck.shared.inset == 0 else { return }
+            let safe = UIApplication.keyWindow?.safeAreaInsets.bottom ?? 0
+            let v = max(0, screenH - r.minY - safe)
+            if abs(v - self.bottom) > 0.5 {
+                self.bottom = v
+                LaptopDeck.shared.debugLog("kb bar at y=\(r.minY) screenH=\(screenH) inset=\(v)")
+            }
+        }
     }
 }
 
