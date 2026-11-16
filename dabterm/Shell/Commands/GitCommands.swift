@@ -244,12 +244,18 @@ struct GhCommand: Command {
             let code: GitHubClient.DeviceCode
             do { code = try await GitHubClient.startDeviceFlow() }
             catch { throw CommandError("device flow failed (\(error)).\nAlternative: create a fine-grained token at github.com/settings/tokens and run\n  echo <token> | gh auth login --with-token\nor paste it in Settings → GitHub.") }
-            ctx.print("! First copy your one-time code: \u{1b}[1m\(code.userCode)\u{1b}[0m\nOpen \(code.verificationURL) and enter the code. Opening Safari...")
+            // Copy the code first, then hand off to Safari a moment later so the clipboard write has
+            // landed and the message is readable. --no-browser skips the hand-off.
+            await MainActor.run { UIPasteboard.general.string = code.userCode }
+            ctx.print("! One-time code: \u{1b}[1m\(code.userCode)\u{1b}[0m  (copied to the clipboard)")
+            let noBrowser = a.contains("--no-browser")
+            if noBrowser { ctx.print("Open \(code.verificationURL) and paste the code.") }
+            else { ctx.print("Opening \(code.verificationURL) in Safari; paste the code there, then come back."); try await Task.sleep(nanoseconds: 1_500_000_000) }
             // Safari takes the foreground; ask for background time so the polling continues while
             // the code is being entered (iOS grants up to a few minutes).
             let bgTask = await MainActor.run { UIApplication.shared.beginBackgroundTask(withName: "gh auth login") }
             defer { Task { @MainActor in UIApplication.shared.endBackgroundTask(bgTask) } }
-            await MainActor.run { UIPasteboard.general.string = code.userCode; if let u = URL(string: code.verificationURL) { UIApplication.shared.open(u) } }
+            if !noBrowser { await MainActor.run { if let u = URL(string: code.verificationURL) { UIApplication.shared.open(u) } } }
             // Poll until GitHub says yes, up to the code's lifetime (15 minutes). Network errors are
             // expected here: the app is in the background while Safari shows the code page, and
             // requests in flight get cut when it is suspended or resumed. Keep polling.
