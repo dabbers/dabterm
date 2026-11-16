@@ -190,8 +190,14 @@ final class ShellSession: ObservableObject {
                 for ch in add { lineBuffer.insert(ch, at: cursor); cursor += 1 }
                 writeRaw(String(add)); redrawFromCursor()
             } else {
+                // List the candidates, then redraw the prompt with the line as it was (prompt() resets
+                // the buffer, so keep a copy).
+                let keep = lineBuffer, keepCursor = cursor
                 write("\n" + Formatter.columns(candidates.sorted(), width: columns) + "\n")
-                prompt(); writeRaw(String(lineBuffer)); cursor = lineBuffer.count
+                prompt()
+                lineBuffer = keep; cursor = keep.count
+                writeRaw(String(keep))
+                moveCursor(keepCursor - cursor)
             }
         }
     }
