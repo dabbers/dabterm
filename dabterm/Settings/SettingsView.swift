@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("git.user.name") private var gitName = ""
     @AppStorage("git.user.email") private var gitEmail = ""
     @State private var storageInfo = ""
+    @AppStorage(ShellRegistry.defaultsKey) private var shell = "dsh"
 
     var body: some View {
         NavigationStack {
@@ -14,6 +15,14 @@ struct SettingsView: View {
                 Section("Terminal") {
                     HStack { Text("Font size"); Slider(value: $app.fontSize, in: 9...22, step: 1); Text("\(Int(app.fontSize))").monospacedDigit().frame(width: 28) }
                     Button("Clear command history") { try? FileManager.default.removeItem(at: ShellSession.historyURL); app.sessions.forEach { $0.history = [] } }
+                }
+                Section("Shell") {
+                    Picker("Shell", selection: $shell) {
+                        ForEach(ShellRegistry.shared.providers, id: \.name) { p in
+                            Text(p.isAvailable ? p.name : "\(p.name) (not in this build)").tag(p.name)
+                        }
+                    }
+                    Text(ShellRegistry.shared.provider(named: shell)?.summary ?? "").font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Editor") {
                     HStack { Text("Font size"); Slider(value: $app.editorFontSize, in: 10...24, step: 1); Text("\(Int(app.editorFontSize))").monospacedDigit().frame(width: 28) }

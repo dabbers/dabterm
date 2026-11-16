@@ -45,6 +45,8 @@
 		B0E376735305CA5E148E8FFC /* JSCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */; };
 		C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */; };
 		C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 559EB9869DE461F1461FAE24 /* SwiftTerm */; };
+		D1A432F0712B3358248396A7 /* BashShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45FB4080EF1125793A7BF5D5 /* BashShell.swift */; };
+		D1D75807C78DED8AEC00EDB1 /* ShellProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069DFD123B36BB3EE9BABCB0 /* ShellProvider.swift */; };
 		E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F26C2BA450A548A43F335D2 /* Tokenizer.swift */; };
 		F4ADA272455000A8EAB121DA /* WasmKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15CC4897512A44BBD2B81F57 /* WasmKit */; };
 		F4F8C2450CC59D84CCCDA294 /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -69,6 +71,7 @@
 
 /* Begin PBXFileReference section */
 		00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLCommand.swift; sourceTree = "<group>"; };
+		069DFD123B36BB3EE9BABCB0 /* ShellProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellProvider.swift; sourceTree = "<group>"; };
 		070B97D19734F6BC68D3449B /* Hinge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hinge.swift; sourceTree = "<group>"; };
 		123B426355E92471BC4F0796 /* SSHConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfig.swift; sourceTree = "<group>"; };
 		1E38296F173038059B88B9A2 /* TerminalContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainer.swift; sourceTree = "<group>"; };
@@ -77,6 +80,7 @@
 		3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3EDC494CE30036B47A790FFE /* PythonCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonCommand.swift; sourceTree = "<group>"; };
 		4327DCA24632381F84315B0E /* TextCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextCommands.swift; sourceTree = "<group>"; };
+		45FB4080EF1125793A7BF5D5 /* BashShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BashShell.swift; sourceTree = "<group>"; };
 		472EA149190C7C58CC34DA91 /* SSHCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHCommands.swift; sourceTree = "<group>"; };
 		4C3AADBF7952DB71D2C6E6B8 /* editor */ = {isa = PBXFileReference; lastKnownFileType = folder; name = editor; path = dabterm/Resources/editor; sourceTree = SOURCE_ROOT; };
 		5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitCommands.swift; sourceTree = "<group>"; };
@@ -197,8 +201,10 @@
 		5BFE3F7A611ED13F4F42A6B7 /* Shell */ = {
 			isa = PBXGroup;
 			children = (
+				45FB4080EF1125793A7BF5D5 /* BashShell.swift */,
 				A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */,
 				D8F44612343221C54A754E77 /* ShellIO.swift */,
+				069DFD123B36BB3EE9BABCB0 /* ShellProvider.swift */,
 				9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */,
 				6F26C2BA450A548A43F335D2 /* Tokenizer.swift */,
 				CC6CD450A1FCC71191539F38 /* Commands */,
@@ -417,6 +423,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A432F0712B3358248396A7 /* BashShell.swift in Sources */,
 				11E36D7E44641ABCA736D0D5 /* CommandRegistry.swift in Sources */,
 				97E59425A05D2C2347FCACCD /* DNS.swift in Sources */,
 				3AC303134C4DEC7FC81598C5 /* DabtermApp.swift in Sources */,
@@ -442,6 +449,7 @@
 				FB2B1A4FC633BF8B1BF9BF55 /* SettingsView.swift in Sources */,
 				51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */,
 				1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */,
+				D1D75807C78DED8AEC00EDB1 /* ShellProvider.swift in Sources */,
 				966380A5CA689BE0E8B630F9 /* ShellSession.swift in Sources */,
 				05A2421EB0D7482DDF603133 /* TerminalContainer.swift in Sources */,
 				55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */,

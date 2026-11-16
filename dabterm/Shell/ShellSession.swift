@@ -226,17 +226,34 @@ final class ShellSession: ObservableObject {
         }
     }
 
+    /// Runs a line through the selected shell (see ShellRegistry); `$?` is set from its status.
     func execute(line: String) async {
         var expanded = line
         // bang history
         if expanded == "!!" , let last = history.dropLast().last { expanded = last; write(expanded + "\n") }
+        let code = await ShellRegistry.shared.current.execute(line: expanded, session: self)
+        env["?"] = String(code)
+    }
+
+    /// dsh: the built-in shell's own line execution. Other shells may call this for a line they
+    /// want run with full terminal access (interactive commands take keystrokes this way).
+    func runDsh(line: String) async -> Int32 {
         let pipelines: [Pipeline]
-        do { pipelines = try Tokenizer.parse(expanded, env: env) } catch { write("dsh: \(error)\n"); env["?"] = "2"; return }
+        do { pipelines = try Tokenizer.parse(line, env: env) } catch { write("dsh: \(error)\n"); return 2 }
+        var code: Int32 = 0
         for p in pipelines {
             if Task.isCancelled { break }
-            let code = await runPipeline(p)
+            code = await runPipeline(p)
             env["?"] = String(code)
         }
+        return code
+    }
+
+    /// Runs one command with buffered stdin/stdout (stderr goes to the terminal): the building
+    /// block for shells that do their own pipelines. No terminal keystrokes reach the command.
+    func runSimple(name: String, args: [String], stdin: String?, out: OutputSink, err: OutputSink) async -> Int32 {
+        let ctx = CommandContext(name: name, args: args, stdin: stdin, session: self, out: out, err: err)
+        return await runCommand(ctx)
     }
 
     private func runPipeline(_ p: Pipeline) async -> Int32 {
@@ -267,7 +284,7 @@ final class ShellSession: ObservableObject {
         return code
     }
 
-    private func runCommand(_ ctx: CommandContext) async -> Int32 {
+    func runCommand(_ ctx: CommandContext) async -> Int32 {
         // alias / script in ~/bin
         if let cmd = registry.command(named: ctx.name) {
             do { return try await cmd.run(ctx) }
@@ -291,16 +308,22 @@ final class ShellSession: ObservableObject {
         return 127
     }
 
+    /// Runs a script file through the selected shell.
     func runScript(_ url: URL, args: [String]) async -> Int32 {
         guard let text = try? String(contentsOf: url, encoding: .utf8) else { write("dsh: cannot read \(url.lastPathComponent)\n"); return 1 }
+        return await ShellRegistry.shared.current.execute(script: text, name: url.lastPathComponent, args: args, session: self)
+    }
+
+    /// dsh scripts: one line at a time, `$1..$n`, `$0`, `$@` set for the duration.
+    func runDshScript(_ text: String, name: String, args: [String]) async -> Int32 {
         let saved = env
         for (i, a) in args.enumerated() { env[String(i + 1)] = a }
-        env["0"] = url.lastPathComponent; env["@"] = args.joined(separator: " ")
+        env["0"] = name; env["@"] = args.joined(separator: " ")
         for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
             let l = line.trimmingCharacters(in: .whitespaces)
             if l.isEmpty || l.hasPrefix("#") { continue }
             if Task.isCancelled { break }
-            await execute(line: l)
+            _ = await runDsh(line: l)
         }
         let code = Int32(env["?"] ?? "0") ?? 0
         let keep = env.filter { !["0", "@"].contains($0.key) && Int($0.key) == nil }

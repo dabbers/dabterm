@@ -123,11 +123,13 @@ struct GitHubClient {
     }
 
     // MARK: device flow
-    /// GitHub OAuth app client id for the device flow. Public by design (device-flow apps have no secret).
-    /// Replace with your own OAuth app's client id (Settings → Developer settings → OAuth Apps, enable Device Flow).
-    static let clientID = "Ov23liDabtermDeviceFlow0"
-    /// True until a real OAuth app client id replaces the placeholder above.
-    static var deviceFlowConfigured: Bool { clientID != "Ov23liDabtermDeviceFlow0" }
+    /// Client id of the dabterm GitHub App, used for the device flow. Public by design (device-flow
+    /// clients have no secret). A GitHub App ignores the scope below: what the token can do is set by
+    /// the app's permissions and by where the user installed it. Forks: register your own app
+    /// (Settings → Developer settings, enable Device Flow) and put its client id here.
+    static let clientID = "Iv23lisj2JHQ65xiz8Gd"
+    /// False only for the placeholder a fork might leave in place.
+    static var deviceFlowConfigured: Bool { !clientID.isEmpty && !clientID.contains("Placeholder") }
     struct DeviceCode { let deviceCode: String; let userCode: String; let verificationURL: String; let interval: Int }
     static func startDeviceFlow() async throws -> DeviceCode {
         var req = URLRequest(url: URL(string: "https://github.com/login/device/code")!)

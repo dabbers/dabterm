@@ -23,7 +23,7 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
 | Scripting | `python` (CPython 3.13), `go` (Yaegi), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
-| Shell | `help clear history env export unset alias which date uname sleep sh` |
+| Shell | `help clear history env export unset alias which date uname sleep sh chsh` |
 
 `ping` and `traceroute` use ICMP datagram sockets (no root needed on iOS). `dig` is a small DNS
 client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
@@ -44,6 +44,15 @@ importable; `os.Exit` ends the program, not the app. Third-party modules and cgo
 and `os.Stdin`/`os.Stdout`/`os.Stderr` are plain readers and writers (use `fmt.Fprint`, `bufio`).
 The framework is not in git: run `scripts/build-go.sh` (needs Go 1.21+) before building, or the
 build still succeeds and `go` explains it is missing.
+
+**Shells.** dsh is the built-in shell and the default. The session runs every line through a
+`ShellProvider` (dabterm/Shell/ShellProvider.swift), so other shells can be compiled in: a shell
+does its own parsing and control flow and runs the app's commands as its programs. `chsh` lists
+them and switches; Settings has the same picker. A shell missing from a build (its framework not
+bundled) is listed but cannot be selected, and dsh is used. The Go framework brings `bash`: a
+bash-syntax shell (mvdan/sh) with functions, loops, `$(...)`, heredocs, globbing and arrays.
+Pipes between commands are buffered there, and a plain single command still runs through dsh so
+`ssh` and the REPLs keep the keyboard. `cd` and the environment stay in sync both ways.
 
 **WebAssembly.** `wasm file.wasm [args]` runs WASI modules on WasmKit, a pure-Swift interpreter
 (App Store safe). stdin/stdout/stderr are wired to the shell, `~` is pre-opened as `/` and the
