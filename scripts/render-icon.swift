@@ -26,23 +26,23 @@ func render(size: CGFloat, background: Bool, glyphScale: CGFloat) -> CGImage {
     ctx.scaleBy(x: glyphScale, y: glyphScale)
     ctx.translateBy(x: -512 * s, y: -512 * s)
 
-    // The caret is a "d" for dab: a round bowl with the ascender on its right, drawn as one
-    // stroke so it reads at 29 pt as well as 1024.
+    // The caret is a capital D for dab, built from a bar and the prompt chevron: | >
     let cyan = CGColor(red: 0.19, green: 0.84, blue: 0.95, alpha: 1)
     ctx.setStrokeColor(cyan)
     ctx.setLineWidth(104 * s)
     ctx.setLineCap(.round)
     ctx.setLineJoin(.round)
-    let bowl = CGPoint(x: 372 * s, y: 438 * s), r = 138 * s
-    ctx.addArc(center: bowl, radius: r, startAngle: 0, endAngle: 2 * .pi, clockwise: false)
+    ctx.move(to: CGPoint(x: 272 * s, y: 300 * s))
+    ctx.addLine(to: CGPoint(x: 272 * s, y: 724 * s))
     ctx.strokePath()
-    ctx.move(to: CGPoint(x: 372 * s + r, y: 300 * s))
-    ctx.addLine(to: CGPoint(x: 372 * s + r, y: 760 * s))
+    ctx.move(to: CGPoint(x: 420 * s, y: 724 * s))
+    ctx.addLine(to: CGPoint(x: 624 * s, y: 512 * s))
+    ctx.addLine(to: CGPoint(x: 420 * s, y: 300 * s))
     ctx.strokePath()
 
     // Cursor block, slightly lighter, on the baseline after the d.
     ctx.setFillColor(CGColor(red: 0.90, green: 0.96, blue: 0.98, alpha: 1))
-    let cursor = CGRect(x: 628 * s, y: 300 * s, width: 150 * s, height: 212 * s)
+    let cursor = CGRect(x: 716 * s, y: 300 * s, width: 140 * s, height: 212 * s)
     ctx.addPath(CGPath(roundedRect: cursor, cornerWidth: 22 * s, cornerHeight: 22 * s, transform: nil))
     ctx.fillPath()
     ctx.restoreGState()
