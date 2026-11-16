@@ -24,7 +24,8 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         cfg.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
         let wv = WKWebView(frame: .zero, configuration: cfg)
         wv.navigationDelegate = self
-        splitObserver = LaptopDeck.shared.$active.sink { [weak self] on in self?.call("dabterm.setSplit(\(on))") }
+        // dropFirst: the sink fires at once, and this runs inside the lazy initializer of webView.
+        splitObserver = LaptopDeck.shared.$active.dropFirst().sink { [weak self] on in self?.call("dabterm.setSplit(\(on))") }
         wv.isOpaque = false; wv.backgroundColor = UIColor(red: 0.157, green: 0.173, blue: 0.204, alpha: 1)
         wv.scrollView.bounces = false
         wv.scrollView.contentInsetAdjustmentBehavior = .never
@@ -42,6 +43,7 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         case "ready":
             ready = true
             applySettings()
+            if LaptopDeck.shared.active { call("dabterm.setSplit(true)") }
             if let p = pendingOpen { pendingOpen = nil; open(p, line: pendingLine); pendingLine = nil }
         case "dirty": dirty = true
         case "clipboard": if let t = body["text"] as? String { UIPasteboard.general.string = t; status = "Copied \(t.count) chars" }
