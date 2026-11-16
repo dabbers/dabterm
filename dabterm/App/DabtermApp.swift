@@ -135,6 +135,16 @@ final class KeyboardInset: ObservableObject {
                 var line = "probe root=\(root.frame) rootSafe=\(root.safeAreaInsets) windowSafe=\(w.safeAreaInsets)"
                 if let fr = UIApplication.firstResponder as? UIView, let fw = fr.window {
                     line += " responder=\(type(of: fr)) at \(fw.convert(fr.bounds, from: fr))"
+                    // Walk up: the first ancestor whose top edge differs from its parent's is the culprit.
+                    var v: UIView? = fr.superview
+                    var chain: [String] = []
+                    while let x = v, x !== fw {
+                        let f = fw.convert(x.bounds, from: x)
+                        let sa = x.safeAreaInsets
+                        chain.append("\(type(of: x)) y=\(Int(f.minY)) h=\(Int(f.height)) sa=\(Int(sa.top))/\(Int(sa.bottom))")
+                        v = x.superview
+                    }
+                    line += "\n  chain: " + chain.joined(separator: "\n  < ")
                 }
                 if #available(iOS 27.1, *) {
                     let div = root.reservedRegions(kind: .division, options: .includeInactive).map { "\($0.frame) active=\($0.isActive)" }
@@ -150,7 +160,10 @@ struct RootView: View {
     @EnvironmentObject var model: AppModel
     private func tabContent<V: View>(_ v: V, _ tab: AppModel.Tab) -> some View {
         let on = model.tab == tab
-        return v.opacity(on ? 1 : 0).allowsHitTesting(on).accessibilityHidden(!on).zIndex(on ? 1 : 0)
+        // The keyboard safe-area region reaches descendants even though the padded root ignores it;
+        // each tab's content must ignore it too, or SwiftUI shrinks the tab by the keyboard again.
+        return v.ignoresSafeArea(.keyboard, edges: .bottom)
+            .opacity(on ? 1 : 0).allowsHitTesting(on).accessibilityHidden(!on).zIndex(on ? 1 : 0)
     }
     @StateObject private var keyboardInset = KeyboardInset()
     var body: some View {
