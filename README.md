@@ -170,6 +170,12 @@ Consequences:
 - Very large repos (>100k tree entries) are refused by the API.
 - A native `libgit2` backend (any remote, local commits, real merges) is the planned follow-up.
 
+## Writing about it
+
+`docs/blog/` holds a post about why this exists and what is in it, with screenshots from the
+simulators. `DABTERM_TYPE="cmd;;cmd"` (like the smoke hook) types lines into the visible terminal
+at launch, which is how those screenshots were taken.
+
 ## Build
 
 Requirements: Xcode 16+ (iOS 18 deployment target), [xcodegen](https://github.com/yonaskolb/XcodeGen),

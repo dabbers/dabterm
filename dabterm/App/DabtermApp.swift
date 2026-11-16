@@ -333,6 +333,16 @@ enum SmokeTest {
             switch tab { case "editor": model.tab = .editor; case "hosts": model.tab = .hosts; case "settings": model.tab = .settings; default: break }
         }
         if let open = env["DABTERM_OPEN"] { model.editorRequest = Workspace.resolve(open, cwd: Workspace.home); model.tab = .editor }
+        // DABTERM_TYPE="cmd;;cmd": typed into the visible terminal one line at a time (screenshots).
+        if let typed = env["DABTERM_TYPE"] {
+            Task {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                for line in typed.components(separatedBy: ";;") {
+                    model.activeSession?.feed(bytes: Array((line + "\r").utf8))
+                    try? await Task.sleep(nanoseconds: 2_500_000_000)
+                }
+            }
+        }
         guard let script = env["DABTERM_SMOKE"] else { return }
         let session = ShellSession()
         let sink = FileSink(url: Workspace.root.appendingPathComponent("smoke.log"))
