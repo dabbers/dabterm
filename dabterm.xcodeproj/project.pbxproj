@@ -14,6 +14,7 @@
 		159285B34C5A1F853F6E293F /* HostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A6CCF8C69F84680140B1C6 /* HostsView.swift */; };
 		1BAAC0133E5A59768034B2F8 /* Yaegi.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC32E44774107629481F13C7 /* Yaegi.xcframework */; };
 		1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F44612343221C54A754E77 /* ShellIO.swift */; };
+		23FF96EDA461AB9FD2663E79 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C019705691FEA1E76DEE44CD /* Assets.xcassets */; };
 		27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */; };
 		2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123B426355E92471BC4F0796 /* SSHConfig.swift */; };
 		31EB400870BBC30A181CCCED /* GoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32651D168D2C1FE0671D7FA2 /* GoTools.swift */; };
@@ -111,6 +112,7 @@
 		B9477A8E6F29B57D41C54708 /* GitRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRepo.swift; sourceTree = "<group>"; };
 		BC32E44774107629481F13C7 /* Yaegi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Yaegi.xcframework; path = "Vendor/go-ios/Yaegi.xcframework"; sourceTree = "<group>"; };
 		BE69F9F038C664BCFDABF690 /* DabtermApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DabtermApp.swift; sourceTree = "<group>"; };
+		C019705691FEA1E76DEE44CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C1CC58D405C3F44BBBF6487A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		C5E6F1115C567E76CB92C59F /* ShellCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellCommands.swift; sourceTree = "<group>"; };
 		D39426231917F27C19DC891C /* packs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = packs; path = dabterm/Resources/packs; sourceTree = SOURCE_ROOT; };
@@ -226,6 +228,7 @@
 		71A6FC67BA1EC828A26E8608 /* dabterm */ = {
 			isa = PBXGroup;
 			children = (
+				C019705691FEA1E76DEE44CD /* Assets.xcassets */,
 				EB85ECAE14996B8FC81438D3 /* Info.plist */,
 				38A3037BDFCE07F566D9353A /* App */,
 				21DD8D41AB270C6308B1A080 /* Crypto */,
@@ -405,6 +408,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				23FF96EDA461AB9FD2663E79 /* Assets.xcassets in Resources */,
 				A8790ABBA9ED3A0091D2014A /* editor in Resources */,
 				A2AA880CDD4642B422D2323B /* packs in Resources */,
 			);
