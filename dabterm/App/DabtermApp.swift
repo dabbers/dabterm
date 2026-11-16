@@ -7,9 +7,24 @@ struct DabtermApp: App {
     init() { Workspace.bootstrap() }
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(model).preferredColorScheme(.dark)
+            RootHost(model: model).ignoresSafeArea().preferredColorScheme(.dark)
         }
     }
+}
+
+/// Hosts RootView in a hosting controller with SwiftUI's keyboard avoidance switched off
+/// (`safeAreaRegions` without `.keyboard`). The app pads for the keyboard itself from the frame
+/// iOS reports; SwiftUI's own avoidance, even when ignored, still shrank the content on a half-open
+/// iPhone Duo where the keyboard frame covers more than half the screen.
+struct RootHost: UIViewControllerRepresentable {
+    let model: AppModel
+    func makeUIViewController(context: Context) -> UIHostingController<AnyView> {
+        let hc = UIHostingController(rootView: AnyView(RootView().environmentObject(model)))
+        hc.safeAreaRegions = .container
+        hc.view.backgroundColor = .black
+        return hc
+    }
+    func updateUIViewController(_ hc: UIHostingController<AnyView>, context: Context) {}
 }
 
 /// Shared app state: terminal sessions, editor requests, settings.
