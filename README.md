@@ -99,7 +99,8 @@ long-press selection still work too.
 
 **git.** `git clone owner/repo`, `status`, `add`, `commit -m` (commits *and* pushes), `pull`, `log`,
 `branch`, `checkout [-b]`, `diff`, `show HEAD:path`, `remote -v`, `git init owner/repo` to link an
-existing folder. `gh auth login` (device flow or paste a token), `gh repo list|create|view`,
+existing folder. `gh auth login` (device flow or paste a token), `gh auth install` (the device
+login is a GitHub App: it only reaches repositories the app is installed on, this opens the install page), `gh repo list|create|view`,
 `gh pr list|create`, `gh issue list`. Tokens go in the Keychain, never in the Files folder.
 
 ## Tool packs (update tools without an app update)

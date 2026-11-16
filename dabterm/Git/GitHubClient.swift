@@ -131,6 +131,25 @@ struct GitHubClient {
     /// the app's permissions and by where the user installed it. Forks: register your own app
     /// (Settings → Developer settings, enable Device Flow) and put its client id here.
     static let clientID = "Iv23lisj2JHQ65xiz8Gd"
+    /// The same app's numeric id and URL slug (github.com/apps/<slug>); used by `gh auth install`.
+    static let appID = 5779009
+    static let appSlug = "dabterm"
+
+    /// Where this app is installed for the signed-in user: account logins and the installation ids.
+    func installations() async throws -> [(account: String, id: Int, appSlug: String)] {
+        let j = try await json("GET", "user/installations")
+        let list = j["installations"] as? [[String: Any]] ?? []
+        return list.filter { ($0["app_id"] as? Int) == Self.appID }.map {
+            ((($0["account"] as? [String: Any])?["login"] as? String) ?? "?", $0["id"] as? Int ?? 0, $0["app_slug"] as? String ?? Self.appSlug)
+        }
+    }
+    /// Public app record by slug (no auth needed); nil when the slug is wrong.
+    static func appExists(slug: String) async -> Bool {
+        var req = URLRequest(url: URL(string: "https://api.github.com/apps/\(slug)")!)
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        guard let (_, r) = try? await URLSession.shared.data(for: req), let http = r as? HTTPURLResponse else { return false }
+        return http.statusCode == 200
+    }
     /// False only for the placeholder a fork might leave in place.
     static var deviceFlowConfigured: Bool { !clientID.isEmpty && !clientID.contains("Placeholder") }
     struct DeviceCode { let deviceCode: String; let userCode: String; let verificationURL: String; let interval: Int; let expiresIn: Int }

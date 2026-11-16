@@ -224,7 +224,7 @@ enum UnifiedDiff {
 
 /// `gh`: auth login/status/logout, repo list/create/view, pr list/create, issue list.
 struct GhCommand: Command {
-    let name = "gh"; let usage = "gh auth login|status|logout|token  |  gh repo list|create|view  |  gh pr list|create  |  gh issue list"; let summary = "GitHub CLI subset (device-flow login)"
+    let name = "gh"; let usage = "gh auth login|install|status|logout|token  |  gh repo list|create|view  |  gh pr list|create  |  gh issue list"; let summary = "GitHub CLI subset (device-flow login)"
     func run(_ ctx: CommandContext) async throws -> Int32 {
         let a = ctx.args
         guard a.count >= 1 else { throw CommandError("usage: \(usage)") }
@@ -281,6 +281,24 @@ struct GhCommand: Command {
                 ctx.out.write(".")
             }
             throw CommandError("timed out waiting for authorization" + (lastError.map { " (last error: \($0))" } ?? ""))
+        case ("auth", "install"):
+            // A GitHub App login only reaches repositories the app is installed on: show where it is
+            // installed and open the install page for more.
+            guard client.token != nil else { throw CommandError("run `gh auth login` first") }
+            let slug = a.dropFirst(2).first(where: { !$0.hasPrefix("-") }) ?? GitHubClient.appSlug
+            let installed = (try? await client.installations()) ?? []
+            if installed.isEmpty { ctx.print("The dabterm app is not installed on any account you can see.") }
+            else { for i in installed { ctx.print("installed on \(i.account)  (manage: https://github.com/settings/installations/\(i.id))") } }
+            let found = installed.first?.appSlug ?? slug
+            guard await GitHubClient.appExists(slug: found) else { throw CommandError("no GitHub App at github.com/apps/\(found); pass the app's slug: gh auth install <slug>") }
+            let url = "https://github.com/apps/\(found)/installations/new"
+            ctx.print("Install or extend it here (pick the account, then all repositories or the ones you want):\n  \(url)")
+            if !a.contains("--no-browser") {
+                ctx.print("Opening Safari...")
+                try await Task.sleep(nanoseconds: 800_000_000)
+                await MainActor.run { if let u = URL(string: url) { UIApplication.shared.open(u) } }
+            }
+            ctx.print("Afterwards the existing login works as is; no need to log in again.")
         case ("auth", "status"):
             guard client.token != nil else { ctx.print("You are not logged into GitHub. Run `gh auth login`."); return 1 }
             ctx.print("✓ Logged in to github.com as \(try await client.viewer()) (token in Keychain)")
