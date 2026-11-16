@@ -126,6 +126,8 @@ struct GitHubClient {
     /// GitHub OAuth app client id for the device flow. Public by design (device-flow apps have no secret).
     /// Replace with your own OAuth app's client id (Settings → Developer settings → OAuth Apps, enable Device Flow).
     static let clientID = "Ov23liDabtermDeviceFlow0"
+    /// True until a real OAuth app client id replaces the placeholder above.
+    static var deviceFlowConfigured: Bool { clientID != "Ov23liDabtermDeviceFlow0" }
     struct DeviceCode { let deviceCode: String; let userCode: String; let verificationURL: String; let interval: Int }
     static func startDeviceFlow() async throws -> DeviceCode {
         var req = URLRequest(url: URL(string: "https://github.com/login/device/code")!)

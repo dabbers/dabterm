@@ -20,7 +20,7 @@ final class CommandRegistry {
             // shell
             HelpCommand(), ClearCommand(), HistoryCommand(), EnvCommand(), ExportCommand(), UnsetCommand(), WhichCommand(),
             DateCommand(), UnameCommand(), SleepCommand(), TrueCommand(), FalseCommand(), ExitCommand(), ShCommand(),
-            EditCommand(), OpenCommand(), JSCommand(), WasmCommand(), PythonCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
+            EditCommand(), OpenCommand(), JSCommand(), WasmCommand(), PythonCommand(), GoCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
             // network
             PingCommand(), TracerouteCommand(), DigCommand(), HostCommand(), CurlCommand(), WgetCommand(), NcCommand(),
             IfconfigCommand(), WhoisCommand(), PortscanCommand(), HttpCommand(),

@@ -9,8 +9,10 @@
 /* Begin PBXBuildFile section */
 		039E7C40978B03E85D093010 /* OpenSSLCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */; };
 		05A2421EB0D7482DDF603133 /* TerminalContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E38296F173038059B88B9A2 /* TerminalContainer.swift */; };
+		0C05C6BD009F0F5D12924202 /* GoCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970ED7179FCCD2F3A0255A0C /* GoCommand.swift */; };
 		11E36D7E44641ABCA736D0D5 /* CommandRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */; };
 		159285B34C5A1F853F6E293F /* HostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A6CCF8C69F84680140B1C6 /* HostsView.swift */; };
+		1BAAC0133E5A59768034B2F8 /* Yaegi.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = BC32E44774107629481F13C7 /* Yaegi.xcframework */; };
 		1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F44612343221C54A754E77 /* ShellIO.swift */; };
 		27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */; };
 		2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123B426355E92471BC4F0796 /* SSHConfig.swift */; };
@@ -28,6 +30,7 @@
 		79D400A8743762C71C830F2D /* EditorWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8373181A3E2F984A457A192 /* EditorWebView.swift */; };
 		7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */; };
 		80B0DAFA03490A83210537C8 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 9EE43C9E8D45C681F73DB8D3 /* Citadel */; };
+		84B4090F6A8C266BD88D0807 /* Yaegi.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BC32E44774107629481F13C7 /* Yaegi.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8BF05C946A13D249B73ABC0A /* WasmCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 670EB508179ACB90359E6955 /* WasmCommand.swift */; };
 		915BC5BF58132AF177D18F89 /* EditorScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B48B2FA74A39FD3D45151C /* EditorScreen.swift */; };
 		966380A5CA689BE0E8B630F9 /* ShellSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */; };
@@ -57,6 +60,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				F4F8C2450CC59D84CCCDA294 /* Python.xcframework in Embed Frameworks */,
+				84B4090F6A8C266BD88D0807 /* Yaegi.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -83,6 +87,7 @@
 		86DC88AD0561520B447A70E0 /* KeyBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyBar.swift; sourceTree = "<group>"; };
 		8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCommands.swift; sourceTree = "<group>"; };
 		9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSession.swift; sourceTree = "<group>"; };
+		970ED7179FCCD2F3A0255A0C /* GoCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoCommand.swift; sourceTree = "<group>"; };
 		976DB65985DB778DB7C52CE6 /* DNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNS.swift; sourceTree = "<group>"; };
 		9F03F1B591E79756884032F9 /* ToolPacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPacks.swift; sourceTree = "<group>"; };
 		A8373181A3E2F984A457A192 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
@@ -90,6 +95,7 @@
 		B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		B70A780258DB00B143678D60 /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = "Vendor/python-ios/Python.xcframework"; sourceTree = "<group>"; };
 		B9477A8E6F29B57D41C54708 /* GitRepo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRepo.swift; sourceTree = "<group>"; };
+		BC32E44774107629481F13C7 /* Yaegi.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Yaegi.xcframework; path = "Vendor/go-ios/Yaegi.xcframework"; sourceTree = "<group>"; };
 		BE69F9F038C664BCFDABF690 /* DabtermApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DabtermApp.swift; sourceTree = "<group>"; };
 		C1CC58D405C3F44BBBF6487A /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
 		C5E6F1115C567E76CB92C59F /* ShellCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellCommands.swift; sourceTree = "<group>"; };
@@ -115,6 +121,7 @@
 				F4ADA272455000A8EAB121DA /* WasmKit in Frameworks */,
 				FBA02718E38457C7C424A857 /* WasmKitWASI in Frameworks */,
 				45ACA706C7B26499288B3CF7 /* Python.xcframework in Frameworks */,
+				1BAAC0133E5A59768034B2F8 /* Yaegi.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +263,7 @@
 			isa = PBXGroup;
 			children = (
 				B70A780258DB00B143678D60 /* Python.xcframework */,
+				BC32E44774107629481F13C7 /* Yaegi.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -282,6 +290,7 @@
 			children = (
 				8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */,
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
+				970ED7179FCCD2F3A0255A0C /* GoCommand.swift */,
 				6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */,
 				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
 				3EDC494CE30036B47A790FFE /* PythonCommand.swift */,
@@ -417,6 +426,7 @@
 				74C1FD2365AC5A7ECC4935D5 /* GitCommands.swift in Sources */,
 				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
+				0C05C6BD009F0F5D12924202 /* GoCommand.swift in Sources */,
 				35DDC72488B23E63E780473C /* Hinge.swift in Sources */,
 				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
 				A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */,
@@ -521,17 +531,18 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"Vendor/go-ios\"",
 					"\"Vendor/python-ios\"",
 				);
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64";
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64 $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64_x86_64-simulator";
 				INFOPLIST_FILE = dabterm/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "-ObjC -lresolv";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dab.dabterm;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -608,17 +619,18 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"Vendor/go-ios\"",
 					"\"Vendor/python-ios\"",
 				);
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64";
-				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64 $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64_x86_64-simulator";
 				INFOPLIST_FILE = dabterm/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = "-ObjC -lresolv";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dab.dabterm;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;

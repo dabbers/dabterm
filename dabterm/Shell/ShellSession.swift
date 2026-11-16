@@ -277,11 +277,12 @@ final class ShellSession: ObservableObject {
         }
         let script = Workspace.binDir.appendingPathComponent(ctx.name)
         let script2 = Workspace.binDir.appendingPathComponent(ctx.name + ".sh")
-        let candidates = [script, script2, ctx.path(ctx.name)] + ["wasm", "py", "js"].map { Workspace.binDir.appendingPathComponent(ctx.name + "." + $0) }
-        for s in candidates where FileManager.default.fileExists(atPath: s.path) && !Workspace.isDirectory(s) && (["sh", "wasm", "py", "js"].contains(s.pathExtension) || s.path.hasPrefix(Workspace.binDir.path) || ctx.name.hasPrefix("./")) {
+        let candidates = [script, script2, ctx.path(ctx.name)] + ["wasm", "py", "js", "go"].map { Workspace.binDir.appendingPathComponent(ctx.name + "." + $0) }
+        for s in candidates where FileManager.default.fileExists(atPath: s.path) && !Workspace.isDirectory(s) && (["sh", "wasm", "py", "js", "go"].contains(s.pathExtension) || s.path.hasPrefix(Workspace.binDir.path) || ctx.name.hasPrefix("./")) {
             switch s.pathExtension {
             case "wasm": return (try? await WasmRunner.run(file: s, args: ctx.args, preopens: [], ctx: ctx)) ?? 1
             case "py": return (try? await PythonCommand().run(await ctx.derived(name: ctx.name, args: [s.path] + ctx.args))) ?? 1
+            case "go": return (try? await GoCommand().run(await ctx.derived(name: ctx.name, args: [s.path] + ctx.args))) ?? 1
             case "js": return (try? await JSCommand().run(await ctx.derived(name: ctx.name, args: [s.path] + ctx.args))) ?? 1
             default: return await runScript(s, args: ctx.args)
             }

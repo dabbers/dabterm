@@ -237,6 +237,9 @@ struct GhCommand: Command {
                 Keychain.set(tok, for: Keychain.githubTokenKey)
                 ctx.print("✓ Logged in as \(try await GitHubClient(token: tok).viewer())"); return 0
             }
+            guard GitHubClient.deviceFlowConfigured else {
+                throw CommandError("device login is not set up in this build: it needs a GitHub OAuth app client id with Device Flow enabled (GitHubClient.clientID).\nUse a token instead: create a fine-grained token at github.com/settings/tokens and run\n  echo <token> | gh auth login --with-token\nor paste it in Settings → GitHub.")
+            }
             ctx.print("Starting GitHub device login...")
             let code: GitHubClient.DeviceCode
             do { code = try await GitHubClient.startDeviceFlow() }

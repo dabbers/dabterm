@@ -51,10 +51,10 @@ targets:
         INFOPLIST_FILE: dabterm/Info.plist
         ENABLE_PREVIEWS: YES
         SUPPORTS_MACCATALYST: NO
-        OTHER_LDFLAGS: "-ObjC"
+        OTHER_LDFLAGS: "-ObjC -lresolv"   # -lresolv: Go's net package (Yaegi) uses the system resolver
         # Python.xcframework slices (xcodegen links the xcframework but the compiler needs the slice on -F)
-        "FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]": "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator"
-        "FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64"
+        "FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]": "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64_x86_64-simulator $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64_x86_64-simulator"
+        "FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]": "$(inherited) $(PROJECT_DIR)/Vendor/python-ios/Python.xcframework/ios-arm64 $(PROJECT_DIR)/Vendor/go-ios/Yaegi.xcframework/ios-arm64"
     dependencies:
       - package: SwiftTerm
       - package: Citadel
@@ -64,6 +64,10 @@ targets:
       - package: WasmKit
         product: WasmKitWASI
       - framework: Vendor/python-ios/Python.xcframework
+        embed: true
+        codeSign: true
+        optional: true
+      - framework: Vendor/go-ios/Yaegi.xcframework
         embed: true
         codeSign: true
         optional: true

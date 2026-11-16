@@ -22,7 +22,7 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
-| Scripting | `python` (CPython 3.13), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
+| Scripting | `python` (CPython 3.13), `go` (Yaegi), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
 | Shell | `help clear history env export unset alias which date uname sleep sh` |
 
 `ping` and `traceroute` use ICMP datagram sockets (no root needed on iOS). `dig` is a small DNS
@@ -35,6 +35,15 @@ with the full standard library including `ssl`, `sqlite3`, `hashlib`, `asyncio`,
 into `~/site-packages` are importable. The interpreter is embedded (one per process, scripts run one
 at a time), which is what Apple allows. The framework is not in git: run `scripts/fetch-python.sh`
 before building, or the build still succeeds and `python` explains it is missing. ~22 MB in the app.
+
+**Go.** `go run file.go [args]`, `go file.go`, `go -e 'fmt.Println(1)'`, piped source, or a REPL
+(expressions print their value). Runs on [Yaegi](https://github.com/traefik/yaegi), a Go interpreter
+written in Go, built into the app as a framework with gomobile: no compiler, no JIT, the standard
+library compiled in. `.go` files in `~/bin` run by name; source packages under `~/go/src` are
+importable; `os.Exit` ends the program, not the app. Third-party modules and cgo are not available,
+and `os.Stdin`/`os.Stdout`/`os.Stderr` are plain readers and writers (use `fmt.Fprint`, `bufio`).
+The framework is not in git: run `scripts/build-go.sh` (needs Go 1.21+) before building, or the
+build still succeeds and `go` explains it is missing.
 
 **WebAssembly.** `wasm file.wasm [args]` runs WASI modules on WasmKit, a pure-Swift interpreter
 (App Store safe). stdin/stdout/stderr are wired to the shell, `~` is pre-opened as `/` and the
@@ -144,6 +153,7 @@ Node 18+ (only to rebuild the editor bundle).
 ```bash
 brew install xcodegen
 scripts/fetch-python.sh        # optional: bundle CPython 3.13 (~35 MB download)
+scripts/build-go.sh            # optional: bundle the Go interpreter (needs Go 1.21+, builds gobridge/ with gomobile)
 xcodegen generate
 open dabterm.xcodeproj
 ```
@@ -196,6 +206,8 @@ scripts/sync-packs.sh  refresh bundled packs from a packs repo before a release
 Packages/DabCrypto/   libcrypto code in its own module (see note below)
 Packages/SwiftTerm/   vendored SwiftTerm 1.99.3 + one extension file exposing selection for the sel key
 Vendor/python-ios/    Python.xcframework (gitignored; scripts/fetch-python.sh)
+Vendor/go-ios/        Yaegi.xcframework (gitignored; scripts/build-go.sh)
+gobridge/             Go side of the `go` command: Yaegi wrapped for gomobile
 scripts/install-python-stdlib.sh   Xcode build phase: copies the stdlib and converts .so modules to frameworks
 ```
 
