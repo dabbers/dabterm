@@ -21,7 +21,7 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Text (Go framework adds `awk yq gofmt tar zip unzip gzip`) | `echo printf grep head tail wc sort uniq cut tr sed diff jq base64 xxd tee seq` |
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
-| Remote | `ssh scp ssh-copy-id git gh` |
+| Remote | `ssh scp ssh-copy-id telnet git gh` |
 | Scripting | `python` + `pip` (CPython 3.13), `go` (Yaegi), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
 | Shell | `help clear history env export unset alias which date uname sleep sh chsh xargs time watch less patch sqlite3 fzf` |
 
@@ -106,7 +106,13 @@ while sel is on, and cut/paste work on it. **all** selects everything; **copy** 
 copies the whole terminal scrollback. The terminal's native long-press menu and the editor's native
 long-press selection still work too.
 
-**git.** `git clone owner/repo`, `status`, `add`, `commit -m` (commits *and* pushes), `pull`, `log`,
+**git (Go framework).** With the Go framework bundled, `git` is go-git: real repositories with
+history in `.git`, local commits, `log`, `diff`, `show`, `branch`, `checkout`, `merge` and `pull`
+(fast-forward), `fetch`, `push`, `remote`, `tag`, `reset`, `rev-parse`. GitHub over HTTPS uses the
+`gh` login token; other remotes use the keys in `~/ssh`. Folders cloned by the API git below (a
+`.dabgit` folder) keep using it until re-cloned. No stash or rebase.
+
+**git (API, without the Go framework).** `git clone owner/repo`, `status`, `add`, `commit -m` (commits *and* pushes), `pull`, `log`,
 `branch`, `checkout [-b]`, `diff`, `show HEAD:path`, `remote -v`, `git init owner/repo` to link an
 existing folder. `gh auth login` (device flow or paste a token), `gh auth install` (the device
 login is a GitHub App: it only reaches repositories the app is installed on, this opens the install page), `gh repo list|create|view`,

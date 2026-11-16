@@ -453,3 +453,84 @@ func withTimeoutValue<T>(_ seconds: Double, _ op: @escaping () async throws -> T
         return r
     }
 }
+
+/// `telnet`: a TCP terminal with telnet option negotiation (RFC 854): servers asking for options
+/// get a polite no except ECHO and SUPPRESS-GO-AHEAD, the window size is announced (NAWS) and the
+/// terminal type answered (xterm-256color). Keystrokes go straight through; Ctrl-] disconnects.
+/// Echo is local unless the server takes it over. For raw sockets without negotiation, use `nc`.
+struct TelnetCommand: Command {
+    let name = "telnet"; let usage = "telnet host [port]   (Ctrl-] to disconnect)"
+    let summary = "telnet client with option negotiation"
+    private enum Cmd: UInt8 { case se = 240, nop = 241, sb = 250, will = 251, wont = 252, doo = 253, dont = 254, iac = 255 }
+    private enum Opt: UInt8 { case echo = 1, sga = 3, ttype = 24, naws = 31 }
+
+    func run(_ ctx: CommandContext) async throws -> Int32 {
+        let pos = ctx.args.filter { !$0.hasPrefix("-") }
+        guard let host = pos.first else { throw CommandError("usage: \(usage)") }
+        let port = UInt16(pos.count > 1 ? pos[1] : "23") ?? 23
+        guard let input = ctx.acquireRawInput() else { throw CommandError("telnet needs the terminal") }
+        let conn = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!, using: .tcp)
+        ctx.print("Trying \(host)...")
+        guard try await withTimeout(10, { try await conn.ready() }) else { conn.cancel(); throw CommandError("connect to \(host) port \(port) timed out") }
+        ctx.print("Connected to \(host).\nEscape character is '^]'.")
+        let (cols, rows) = await ctx.session.size
+        var serverEcho = false
+        let out = ctx.out
+        // Server -> terminal, with the IAC protocol filtered and answered.
+        let reader = Task {
+            var pending: [UInt8] = []
+            while let d = try? await conn.receiveAsync() {
+                var plain: [UInt8] = []
+                var bytes = pending + [UInt8](d); pending = []
+                var i = 0
+                while i < bytes.count {
+                    let b = bytes[i]
+                    guard b == Cmd.iac.rawValue else { plain.append(b); i += 1; continue }
+                    guard i + 1 < bytes.count else { pending = [b]; break }
+                    let c = bytes[i + 1]
+                    switch c {
+                    case Cmd.iac.rawValue: plain.append(255); i += 2
+                    case Cmd.will.rawValue, Cmd.wont.rawValue, Cmd.doo.rawValue, Cmd.dont.rawValue:
+                        guard i + 2 < bytes.count else { pending = Array(bytes[i...]); i = bytes.count; break }
+                        let opt = bytes[i + 2]
+                        var reply: [UInt8] = []
+                        switch (c, opt) {
+                        case (Cmd.will.rawValue, Opt.echo.rawValue): serverEcho = true; reply = [255, Cmd.doo.rawValue, opt]
+                        case (Cmd.wont.rawValue, Opt.echo.rawValue): serverEcho = false; reply = [255, Cmd.dont.rawValue, opt]
+                        case (Cmd.will.rawValue, Opt.sga.rawValue): reply = [255, Cmd.doo.rawValue, opt]
+                        case (Cmd.will.rawValue, _): reply = [255, Cmd.dont.rawValue, opt]
+                        case (Cmd.doo.rawValue, Opt.sga.rawValue): reply = [255, Cmd.will.rawValue, opt]
+                        case (Cmd.doo.rawValue, Opt.ttype.rawValue): reply = [255, Cmd.will.rawValue, opt]
+                        case (Cmd.doo.rawValue, Opt.naws.rawValue):
+                            reply = [255, Cmd.will.rawValue, opt, 255, Cmd.sb.rawValue, opt, UInt8(cols >> 8), UInt8(cols & 255), UInt8(rows >> 8), UInt8(rows & 255), 255, Cmd.se.rawValue]
+                        case (Cmd.doo.rawValue, _): reply = [255, Cmd.wont.rawValue, opt]
+                        default: break
+                        }
+                        if !reply.isEmpty { try? await conn.sendAsync(Data(reply)) }
+                        i += 3
+                    case Cmd.sb.rawValue:
+                        // Subnegotiation up to IAC SE; answer a terminal-type request.
+                        guard let end = (i + 2..<max(i + 2, bytes.count - 1)).first(where: { bytes[$0] == 255 && bytes[$0 + 1] == Cmd.se.rawValue }) else { pending = Array(bytes[i...]); i = bytes.count; break }
+                        if i + 3 < bytes.count, bytes[i + 2] == Opt.ttype.rawValue, bytes[i + 3] == 1 {
+                            try? await conn.sendAsync(Data([255, Cmd.sb.rawValue, Opt.ttype.rawValue, 0] + Array("xterm-256color".utf8) + [255, Cmd.se.rawValue]))
+                        }
+                        i = end + 2
+                    default: i += 2   // NOP, GA, and other two-byte commands
+                    }
+                }
+                if !plain.isEmpty { out.write(String(decoding: plain, as: UTF8.self)) }
+            }
+            out.write("\nConnection closed by foreign host.\n")
+        }
+        for await bytes in input {
+            if bytes.contains(29) { break }   // Ctrl-]
+            var send: [UInt8] = []
+            for b in bytes { if b == 255 { send += [255, 255] } else if b == 13 { send += [13, 10] } else { send.append(b) } }
+            if !serverEcho { out.write(String(decoding: bytes.map { $0 == 13 ? 10 : $0 }, as: UTF8.self).replacingOccurrences(of: "\n", with: "\r\n")) }
+            try? await conn.sendAsync(Data(send))
+        }
+        reader.cancel(); conn.cancel()
+        ctx.print("\nConnection closed.")
+        return 0
+    }
+}

@@ -25,7 +25,7 @@ final class CommandRegistry {
             DateCommand(), UnameCommand(), SleepCommand(), TrueCommand(), FalseCommand(), ExitCommand(), ShCommand(),
             EditCommand(), OpenCommand(), JSCommand(), WasmCommand(), PythonCommand(), GoCommand(), ChshCommand(), XargsCommand(), TimeCommand(), WatchCommand(), LessCommand(), PatchCommand(), SqliteCommand(), PipCommand(), FzfCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
             // network
-            PingCommand(), TracerouteCommand(), DigCommand(), HostCommand(), CurlCommand(), WgetCommand(), NcCommand(),
+            PingCommand(), TracerouteCommand(), DigCommand(), HostCommand(), CurlCommand(), WgetCommand(), NcCommand(), TelnetCommand(),
             IfconfigCommand(), WhoisCommand(), PortscanCommand(), HttpCommand(),
             // crypto
             OpenSSLCommand(), ShasumCommand(), Md5Command(), UUIDCommand(),
@@ -38,6 +38,7 @@ final class CommandRegistry {
         #if canImport(Yaegi)
         // Tools from the Go framework; its jq (the full language) replaces the path-only one.
         for c in GoTools.all { commands[c.name] = c }
+        commands["git"] = GoGitCommand()   // go-git; .dabgit folders still go to the API git
         commands["gunzip"] = AliasedCommand(name: "gunzip", target: "gzip", prefix: ["-d"])
         #endif
         commands["ll"] = AliasedCommand(name: "ll", target: "ls", prefix: ["-la"])

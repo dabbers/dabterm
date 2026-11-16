@@ -26,6 +26,7 @@
 		45ACA706C7B26499288B3CF7 /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; };
 		4DF5601A0E1A68BC4D046F86 /* FzfCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCFFBB1F61999C5888CE296 /* FzfCommand.swift */; };
 		51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E6F1115C567E76CB92C59F /* ShellCommands.swift */; };
+		52ADDA4714086E5EA2F7E1CC /* GoGitCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 990A9FCB0087801A05E220EF /* GoGitCommand.swift */; };
 		55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4327DCA24632381F84315B0E /* TextCommands.swift */; };
 		56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8806238848ABF3CC1EE8F885 /* DabCrypto */; };
 		5FE1872A5DC553DE2EA28A4C /* PosixCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B58CB35728FCD52D1A69C1F /* PosixCommands.swift */; };
@@ -99,6 +100,7 @@
 		9527D154D9DBC2F4B7B11CD2 /* ShellSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSession.swift; sourceTree = "<group>"; };
 		970ED7179FCCD2F3A0255A0C /* GoCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoCommand.swift; sourceTree = "<group>"; };
 		976DB65985DB778DB7C52CE6 /* DNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNS.swift; sourceTree = "<group>"; };
+		990A9FCB0087801A05E220EF /* GoGitCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoGitCommand.swift; sourceTree = "<group>"; };
 		9F03F1B591E79756884032F9 /* ToolPacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPacks.swift; sourceTree = "<group>"; };
 		A8373181A3E2F984A457A192 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
 		A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRegistry.swift; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 				ABCFFBB1F61999C5888CE296 /* FzfCommand.swift */,
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
 				970ED7179FCCD2F3A0255A0C /* GoCommand.swift */,
+				990A9FCB0087801A05E220EF /* GoGitCommand.swift */,
 				32651D168D2C1FE0671D7FA2 /* GoTools.swift */,
 				6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */,
 				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
@@ -447,6 +450,7 @@
 				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
 				0C05C6BD009F0F5D12924202 /* GoCommand.swift in Sources */,
+				52ADDA4714086E5EA2F7E1CC /* GoGitCommand.swift in Sources */,
 				31EB400870BBC30A181CCCED /* GoTools.swift in Sources */,
 				35DDC72488B23E63E780473C /* Hinge.swift in Sources */,
 				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
