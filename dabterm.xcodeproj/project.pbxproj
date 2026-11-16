@@ -15,6 +15,7 @@
 		27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */; };
 		2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123B426355E92471BC4F0796 /* SSHConfig.swift */; };
 		33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CC58D405C3F44BBBF6487A /* Workspace.swift */; };
+		35DDC72488B23E63E780473C /* Hinge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070B97D19734F6BC68D3449B /* Hinge.swift */; };
 		3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472EA149190C7C58CC34DA91 /* SSHCommands.swift */; };
 		3AC303134C4DEC7FC81598C5 /* DabtermApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE69F9F038C664BCFDABF690 /* DabtermApp.swift */; };
 		4456AAF2606BC23E47BCAA60 /* PythonCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC494CE30036B47A790FFE /* PythonCommand.swift */; };
@@ -41,7 +42,6 @@
 		B0E376735305CA5E148E8FFC /* JSCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */; };
 		C0F8F30D6CEBBA6DDFF58581 /* SSHKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB263E3A0902AEEB07E7D291 /* SSHKeys.swift */; };
 		C9763A9E9A2D11902A233746 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 559EB9869DE461F1461FAE24 /* SwiftTerm */; };
-		E5E1CB2F23B31D9FA2A67744 /* LaptopDeck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3708A808685C6AF5C111D031 /* LaptopDeck.swift */; };
 		E624996E8D17030CB65B059E /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F26C2BA450A548A43F335D2 /* Tokenizer.swift */; };
 		F4ADA272455000A8EAB121DA /* WasmKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15CC4897512A44BBD2B81F57 /* WasmKit */; };
 		F4F8C2450CC59D84CCCDA294 /* Python.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -65,10 +65,10 @@
 
 /* Begin PBXFileReference section */
 		00DD02BE5A3D511B7F1BEA7C /* OpenSSLCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSSLCommand.swift; sourceTree = "<group>"; };
+		070B97D19734F6BC68D3449B /* Hinge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hinge.swift; sourceTree = "<group>"; };
 		123B426355E92471BC4F0796 /* SSHConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfig.swift; sourceTree = "<group>"; };
 		1E38296F173038059B88B9A2 /* TerminalContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainer.swift; sourceTree = "<group>"; };
 		35B48B2FA74A39FD3D45151C /* EditorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorScreen.swift; sourceTree = "<group>"; };
-		3708A808685C6AF5C111D031 /* LaptopDeck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaptopDeck.swift; sourceTree = "<group>"; };
 		38A6CCF8C69F84680140B1C6 /* HostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsView.swift; sourceTree = "<group>"; };
 		3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3EDC494CE30036B47A790FFE /* PythonCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonCommand.swift; sourceTree = "<group>"; };
@@ -180,8 +180,8 @@
 		58AB58D5AF0F2729B3CA3E9A /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
+				070B97D19734F6BC68D3449B /* Hinge.swift */,
 				86DC88AD0561520B447A70E0 /* KeyBar.swift */,
-				3708A808685C6AF5C111D031 /* LaptopDeck.swift */,
 				1E38296F173038059B88B9A2 /* TerminalContainer.swift */,
 			);
 			path = Terminal;
@@ -417,12 +417,12 @@
 				74C1FD2365AC5A7ECC4935D5 /* GitCommands.swift in Sources */,
 				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
+				35DDC72488B23E63E780473C /* Hinge.swift in Sources */,
 				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
 				A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */,
 				B0E376735305CA5E148E8FFC /* JSCommand.swift in Sources */,
 				4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */,
 				97327EF9B4FEF01BABA3EAEB /* Keychain.swift in Sources */,
-				E5E1CB2F23B31D9FA2A67744 /* LaptopDeck.swift in Sources */,
 				7C4EC0442543A1687FC5AEF7 /* NetworkCommands.swift in Sources */,
 				039E7C40978B03E85D093010 /* OpenSSLCommand.swift in Sources */,
 				4456AAF2606BC23E47BCAA60 /* PythonCommand.swift in Sources */,

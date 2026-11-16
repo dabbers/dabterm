@@ -15,7 +15,6 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
     private var pendingOpen: URL? = nil
     private var pendingLine: Int? = nil
     var onSaved: ((URL) -> Void)?
-    private var splitObserver: AnyCancellable?
 
     lazy var webView: WKWebView = {
         let cfg = WKWebViewConfiguration()
@@ -24,8 +23,6 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         cfg.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
         let wv = WKWebView(frame: .zero, configuration: cfg)
         wv.navigationDelegate = self
-        // dropFirst: the sink fires at once, and this runs inside the lazy initializer of webView.
-        splitObserver = LaptopDeck.shared.$active.dropFirst().sink { [weak self] on in self?.call("dabterm.setSplit(\(on))") }
         wv.isOpaque = false; wv.backgroundColor = UIColor(red: 0.157, green: 0.173, blue: 0.204, alpha: 1)
         wv.scrollView.bounces = false
         wv.scrollView.contentInsetAdjustmentBehavior = .never
@@ -43,7 +40,6 @@ final class EditorController: NSObject, ObservableObject, WKScriptMessageHandler
         case "ready":
             ready = true
             applySettings()
-            if LaptopDeck.shared.active { call("dabterm.setSplit(true)") }
             if let p = pendingOpen { pendingOpen = nil; open(p, line: pendingLine); pendingLine = nil }
         case "dirty": dirty = true
         case "clipboard": if let t = body["text"] as? String { UIPasteboard.general.string = t; status = "Copied \(t.count) chars" }
@@ -136,23 +132,7 @@ enum EditorKeyBarInstaller {
             }
         }
         bars[ObjectIdentifier(wv)] = bar
-        MainActor.assumeIsolated {
-            LaptopDeck.shared.register(wv, bar: bar) { key, mods in
-                Task { @MainActor in
-                    switch key {
-                    case .text(let s):
-                        if mods.contains(.ctrl) { break }   // no shortcuts in the editor from the deck
-                        controller.insert(s)
-                    case .backspace: controller.key("backspace")
-                    case .enter: controller.key("enter")
-                    case .esc: controller.key("esc")
-                    case .tab: controller.key("tab")
-                    case .up: controller.key("up"); case .down: controller.key("down")
-                    case .left: controller.key("left"); case .right: controller.key("right")
-                    }
-                }
-            }
-        }
+        MainActor.assumeIsolated { HingeMonitor.shared.watch(wv) }
         let newClassName = "DabWKContentWithBar_\(String(describing: type(of: target)))"
         if let cls = NSClassFromString(newClassName) { object_setClass(target, cls); return }
         guard let newClass = objc_allocateClassPair(type(of: target), newClassName, 0) else { return }
@@ -160,19 +140,10 @@ enum EditorKeyBarInstaller {
             var v: UIView? = view
             while let x = v, !(x is WKWebView) { v = x.superview }
             guard let wv = v as? WKWebView, let bar = bars[ObjectIdentifier(wv)] else { return nil }
-            return MainActor.assumeIsolated {
-                LaptopDeck.shared.activate(host: wv)
-                return LaptopDeck.shared.active ? nil : bar
-            }
+            return bar
         }
         let imp = imp_implementationWithBlock(block)
         class_addMethod(newClass, NSSelectorFromString("inputAccessoryView"), imp, "@@:")
-        // While the laptop deck is up the editor must not raise a keyboard: refuse first responder.
-        // CodeMirror still edits through dabterm.insert / dabterm.key without DOM focus.
-        let frBlock: @convention(block) (UIView) -> Bool = { _ in
-            MainActor.assumeIsolated { !LaptopDeck.shared.active }
-        }
-        class_addMethod(newClass, NSSelectorFromString("canBecomeFirstResponder"), imp_implementationWithBlock(frBlock), "B@:")
         objc_registerClassPair(newClass)
         object_setClass(target, newClass)
     }

@@ -107,50 +107,75 @@ final class AppModel: ObservableObject {
 @MainActor
 final class KeyboardInset: ObservableObject {
     @Published var bottom: CGFloat = 0
+    /// Height of the system keyboard alone (frame minus our bar), learned whenever the device is
+    /// not half-open. Half-open, the reported frame also contains the empty band iOS leaves between
+    /// the accessory at the top of the lower screen and the keys at its bottom.
+    private var bareKeyboard: CGFloat {
+        get { CGFloat(UserDefaults.standard.double(forKey: "bareKeyboardHeight")) }
+        set { UserDefaults.standard.set(Double(newValue), forKey: "bareKeyboardHeight") }
+    }
+    private weak var dockedBar: KeyBar?
     init() {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let frame = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
                   let screen = (n.object as? UIScreen) ?? UIApplication.shared.connectedScenes.compactMap({ ($0 as? UIWindowScene)?.screen }).first else { return }
-            // The root view ignores SwiftUI's keyboard safe area and pads by this instead, so the inset is
-            // computed in one place (SwiftUI's avoidance and the floating bar's padding used to stack).
             // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
             guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
             // Our padding sits above the bottom safe area, which the keyboard covers: take it off.
             // Measure against the window, not the screen: half-open, iOS shrinks the window to the
-            // upper half while a system keyboard is up, and only the overlap matters.
+            // upper half and only the overlap matters.
             let window = UIApplication.keyWindow
             let safe = window?.safeAreaInsets.bottom ?? 0
             let bottomEdge = window?.frame.maxY ?? screen.bounds.height
             self.bottom = max(0, min(frame.height, max(0, bottomEdge - frame.minY)) - safe)
-            LaptopDeck.shared.debugLog("kb frame=\(frame) screen=\(screen.bounds.size) inset=\(self.bottom)")
+            HingeMonitor.shared.log("kb frame=\(frame) screen=\(screen.bounds.size) window=\(window?.frame ?? .zero) inset=\(self.bottom)")
+            self.fitBand(keyboardFrame: frame, screen: screen.bounds.size)
         }
-        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in self?.bottom = 0 }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.bottom = 0
+            self?.dockedBar?.band = 0
+        }
         // The notification's frame is only an estimate on a foldable; the docked key bar says where
         // the keyboard really starts, so once it is on screen its position wins.
         KeyBar.onPlaced = { [weak self] bar in
             guard let self, let w = bar.window else { return }
+            self.dockedBar = bar
             let r = w.convert(bar.bounds, from: bar)
-            let screenH = w.screen.bounds.height
-            guard r.height > 0, r.minY > 0, r.minY < screenH, LaptopDeck.shared.inset == 0 else { return }
-            let safe = UIApplication.keyWindow?.safeAreaInsets.bottom ?? 0
-            let v = max(0, screenH - r.minY - safe)
+            guard let app = UIApplication.keyWindow else { return }
+            let bottomEdge = app.frame.maxY
+            guard r.height > 0, r.minY > 0, r.minY < bottomEdge + r.height else { return }
+            let v = max(0, bottomEdge - r.minY - app.safeAreaInsets.bottom)
             if abs(v - self.bottom) > 0.5 {
                 self.bottom = v
-                LaptopDeck.shared.debugLog("kb bar at y=\(r.minY) screenH=\(screenH) inset=\(v)")
+                HingeMonitor.shared.log("kb bar at \(r) window bottom=\(bottomEdge) inset=\(v)")
             }
         }
+    }
+
+    /// Half-open in portrait: grow the bar by the empty band so the strip sits right above the keys.
+    private func fitBand(keyboardFrame frame: CGRect, screen: CGSize) {
+        guard let bar = dockedBar ?? (UIApplication.firstResponder?.inputAccessoryView as? KeyBar) else { return }
+        let split = HingeMonitor.shared.partiallyOpen && screen.height > screen.width
+        if !split {
+            if bar.band != 0 { bar.band = 0; UIApplication.firstResponder?.reloadInputViews() }
+            else if screen.height > screen.width, frame.height > bar.barHeight { bareKeyboard = frame.height - bar.barHeight }
+            return
+        }
+        guard bar.band == 0, bareKeyboard > 0 else { return }
+        let band = frame.height - bar.barHeight - bareKeyboard
+        guard band > 20 else { return }
+        bar.band = band
+        HingeMonitor.shared.log("kb band=\(band) bare=\(bareKeyboard)")
+        UIApplication.firstResponder?.reloadInputViews()
     }
 }
 
 struct RootView: View {
-    private static let tabs: [AppModel.Tab] = [.terminal, .editor, .hosts, .settings]
     @EnvironmentObject var model: AppModel
     @StateObject private var keyboardInset = KeyboardInset()
-    @ObservedObject private var deck = LaptopDeck.shared
     var body: some View {
         // The system tab bar is never shown: iOS 26 hides it under the keyboard and floats it as a
-        // big pill otherwise. We draw our own slim one above the keyboard; while the laptop deck is
-        // up, the deck draws the same tabs at its foot instead.
+        // big pill otherwise. We draw our own slim one above the keyboard.
         VStack(spacing: 0) {
             TabView(selection: $model.tab) {
                 TerminalTabView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.terminal)
@@ -158,22 +183,15 @@ struct RootView: View {
                 HostsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.hosts)
                 SettingsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.settings)
             }
-            if !deck.active { AppTabBar(selection: $model.tab) }
+            AppTabBar(selection: $model.tab)
         }
         .tint(.cyan)
-        .onAppear {
-            LaptopDeck.shared.setTabs(AppTabBar.items.map { .init(title: $0.title, image: $0.image) }) { i in model.tab = Self.tabs[i] }
-            LaptopDeck.shared.setSelectedTab(Self.tabs.firstIndex(of: model.tab) ?? 0)
-        }
-        // Pad for the keyboard (or the laptop deck) ourselves, then ignore SwiftUI's own keyboard
-        // avoidance *outside* the padding; the other way round both subtract the keyboard height.
-        .padding(.bottom, deck.inset > 0 ? deck.inset : keyboardInset.bottom)
+        // Pad for the keyboard ourselves, then ignore SwiftUI's own keyboard avoidance *outside*
+        // the padding; the other way round both subtract the keyboard height.
+        .padding(.bottom, keyboardInset.bottom)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onOpenURL { url in model.handleIncoming(url) }
         .onChange(of: model.tab) { _, tab in
-            LaptopDeck.shared.setSelectedTab(Self.tabs.firstIndex(of: tab) ?? 0)
-            // The laptop deck's strip and key routing follow the visible tab.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { LaptopDeck.shared.refresh() }
             // The editor's web view keeps keyboard focus across tab switches; hand it to the terminal.
             if tab == .terminal { DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { model.activeSession?.focusTerminal?() } }
             else { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }

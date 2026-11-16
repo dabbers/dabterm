@@ -128,19 +128,6 @@ function dragSelect(phase, x, y) {
   else if (phase === "move" && dragAnchor != null) { view.dispatch({ selection: EditorSelection.single(dragAnchor, pos), scrollIntoView: true }); }
   else if (phase === "end") { dragAnchor = null; }
 }
-// While the laptop deck is up the web view is never first responder, so WebKit's own tap-to-place-caret
-// does nothing; place it ourselves from the tap position (only when unfocused, so normal taps,
-// double-tap word selection and drags keep their native behaviour).
-let tapStart = null;
-view.contentDOM.addEventListener("pointerdown", e => { tapStart = { x: e.clientX, y: e.clientY }; }, { passive: true });
-view.contentDOM.addEventListener("pointerup", e => {
-  const start = tapStart; tapStart = null;
-  if (selectMode || view.hasFocus || !start) return;
-  if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
-  const pos = posAt(e.clientX, e.clientY);
-  if (pos != null) view.dispatch({ selection: EditorSelection.single(pos) });
-}, { passive: true });
-
 function extend(dir) {
   const sel = view.state.selection.main;
   const line = view.state.doc.lineAt(sel.head);
@@ -158,13 +145,9 @@ function extend(dir) {
   view.dispatch({ selection: EditorSelection.single(sel.anchor, head), scrollIntoView: true });
 }
 
-// While the laptop deck is up the web view must not hold an input session: iOS would float the
-// form accessory (prev/next/done) over the deck. Keep the element blurred and never re-focus it.
-let split = false;
-function focus() { if (!split) view.focus(); }
+function focus() { view.focus(); }
 
 window.dabterm = {
-  setSplit(on) { split = on; if (on) { view.contentDOM.blur(); if (document.activeElement) document.activeElement.blur(); } else focus(); },
   open(path, content) {
     currentPath = path; dirty = false;
     view.setState(makeState(content, path));

@@ -26,6 +26,7 @@ final class KeyBar: UIInputView {
     init(frame: CGRect, handler: @escaping (Key) -> Void, showsCut: Bool = false) {
         self.handler = handler
         self.showsCut = showsCut
+        self.barHeight = frame.height
         super.init(frame: frame, inputViewStyle: .keyboard)
         handlerBox.fn = handler
         autoresizingMask = .flexibleHeight
@@ -38,18 +39,31 @@ final class KeyBar: UIInputView {
     /// its top edge is exactly where the visible keyboard starts, which the keyboard notifications
     /// do not reliably say on a foldable (they report padded frames during posture changes).
     nonisolated(unsafe) static var onPlaced: ((KeyBar) -> Void)?
+    /// The bar's own height; the frame may be taller by `band` (see below).
+    let barHeight: CGFloat
+    /// Half-open on a foldable, iOS places the accessory at the top of the lower screen and the keys
+    /// at its bottom, with an empty band between. The bar grows by that band so the keys stay
+    /// directly below the strip: the extra height is empty backdrop above the strip.
+    var band: CGFloat = 0 {
+        didSet {
+            guard band != oldValue else { return }
+            frame.size.height = barHeight + band
+            invalidateIntrinsicContentSize()
+            setNeedsLayout()
+        }
+    }
     override func layoutSubviews() {
         super.layoutSubviews()
+        content.frame = CGRect(x: 0, y: bounds.height - barHeight, width: bounds.width, height: barHeight)
         if window != nil { Self.onPlaced?(self) }
     }
 
-    /// Everything visible lives in `content`, a plain view that LaptopDeck can lift out of this
-    /// input view and float elsewhere. The UIInputView itself must stay where UIKit put it.
+    /// Everything visible lives in `content`, pinned to the bottom of this input view (which may be
+    /// taller than the strip, see `band`).
     let content = UIView()
 
     private func build() {
         content.frame = bounds
-        content.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         content.backgroundColor = .clear
         addSubview(content)
         let scroll = UIScrollView(); scroll.showsHorizontalScrollIndicator = false
