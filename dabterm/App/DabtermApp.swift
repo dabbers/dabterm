@@ -141,6 +141,29 @@ final class KeyboardInset: ObservableObject {
             HingeMonitor.shared.log("kb settle: bar at y=\(r.minY), inset \(bottom) -> \(v)")
             bottom = v
         }
+        applyFold(keyboardTop: r.minY)
+    }
+
+    /// Half-open: iOS docks the accessory above the fold, keys at the bottom of the lower panel.
+    /// Float the strip into the space under the fold and let the content use the accessory's band
+    /// above it, so both bars sit next to what they belong to.
+    private func applyFold(keyboardTop: CGFloat) {
+        guard let bar = dockedBar, let app = UIApplication.keyWindow, let root = app.rootViewController?.view else { return }
+        var fold: CGRect? = nil
+        if #available(iOS 27.1, *) {
+            fold = root.reservedRegions(kind: .division).first { $0.isActive && $0.frame.width > $0.frame.height }
+                .map { root.convert($0.frame, to: app) }
+        }
+        guard !hiding, let fold, keyboardTop <= fold.minY + 1, keyboardTop > 0 else {
+            if bar.isFloating { bar.unfloat(); HingeMonitor.shared.log("kb unfloat") }
+            return
+        }
+        let h = bar.bounds.height
+        bar.float(in: app, frame: CGRect(x: 0, y: fold.maxY, width: app.bounds.width, height: h))
+        // The accessory's band above the fold is now empty: give it to the content.
+        let want = max(0, app.frame.maxY - fold.minY - app.safeAreaInsets.bottom)
+        if abs(want - bottom) > 0.5 { bottom = want }
+        HingeMonitor.shared.log("kb float: strip at y=\(fold.maxY) fold=\(fold) inset=\(want)")
     }
     init() {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
@@ -157,10 +180,12 @@ final class KeyboardInset: ObservableObject {
             self.hiding = frame.minY >= bottomEdge
             self.bottom = max(0, min(frame.height, max(0, bottomEdge - frame.minY)) - safe)
             HingeMonitor.shared.log("kb frame=\(frame) screen=\(screen.bounds.size) window=\(window?.frame ?? .zero) inset=\(self.bottom)")
+            self.applyFold(keyboardTop: frame.minY)
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in
             self?.hiding = true
             self?.bottom = 0
+            self?.dockedBar?.unfloat()
         }
         // The notifications are not the last word on a foldable: at the end of a bent-to-flat
         // transition iOS sends one more with the stale bent frame. So once things settle, after a

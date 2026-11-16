@@ -26,7 +26,9 @@ final class KeyBar: UIInputView {
     init(frame: CGRect, handler: @escaping (Key) -> Void, showsCut: Bool = false) {
         self.handler = handler
         self.showsCut = showsCut
-        super.init(frame: frame, inputViewStyle: .keyboard)
+        // Plain style: the input view is transparent, the strip paints its own background, so the
+        // strip can leave it (see float) without an empty blurred band staying behind.
+        super.init(frame: frame, inputViewStyle: .default)
         handlerBox.fn = handler
         autoresizingMask = .flexibleHeight
         build()
@@ -43,13 +45,42 @@ final class KeyBar: UIInputView {
         if window != nil { Self.onPlaced?(self) }
     }
 
+    /// Half-open, iOS docks this accessory above the fold and the keys at the bottom of the lower
+    /// panel, with free space between. The strip moves into that space (a plain view in the app
+    /// window) so the keys sit right under it; this input view stays as an empty, touch-transparent
+    /// placeholder so the keyboard frame does not change.
+    private static let floatHost = UIView()
+    private(set) var isFloating = false
+    func float(in window: UIWindow, frame f: CGRect) {
+        let host = Self.floatHost
+        if host.superview !== window { host.removeFromSuperview(); window.addSubview(host) }
+        host.frame = f
+        window.bringSubviewToFront(host)
+        if content.superview !== host {
+            content.removeFromSuperview()
+            host.addSubview(content)
+        }
+        content.frame = host.bounds
+        isUserInteractionEnabled = false
+        isFloating = true
+    }
+    func unfloat() {
+        guard isFloating else { return }
+        content.removeFromSuperview()
+        content.frame = bounds
+        addSubview(content)
+        Self.floatHost.removeFromSuperview()
+        isUserInteractionEnabled = true
+        isFloating = false
+    }
+
     /// Everything visible lives in `content`, a plain view filling this input view.
     let content = UIView()
 
     private func build() {
         content.frame = bounds
         content.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        content.backgroundColor = .clear
+        content.backgroundColor = UIColor(white: 0.11, alpha: 1)
         addSubview(content)
         let scroll = UIScrollView(); scroll.showsHorizontalScrollIndicator = false
         scroll.translatesAutoresizingMaskIntoConstraints = false
