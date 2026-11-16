@@ -24,6 +24,7 @@
 		4456AAF2606BC23E47BCAA60 /* PythonCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC494CE30036B47A790FFE /* PythonCommand.swift */; };
 		4559B61E465757129AC5E6C6 /* KeyBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86DC88AD0561520B447A70E0 /* KeyBar.swift */; };
 		45ACA706C7B26499288B3CF7 /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B70A780258DB00B143678D60 /* Python.xcframework */; };
+		4DF5601A0E1A68BC4D046F86 /* FzfCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCFFBB1F61999C5888CE296 /* FzfCommand.swift */; };
 		51F662BD965739F4EA820EF4 /* ShellCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E6F1115C567E76CB92C59F /* ShellCommands.swift */; };
 		55E79656AE6174F4E6CFEA99 /* TextCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4327DCA24632381F84315B0E /* TextCommands.swift */; };
 		56DACEF5A87ED425D3683F85 /* DabCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8806238848ABF3CC1EE8F885 /* DabCrypto */; };
@@ -101,6 +102,7 @@
 		9F03F1B591E79756884032F9 /* ToolPacks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPacks.swift; sourceTree = "<group>"; };
 		A8373181A3E2F984A457A192 /* EditorWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorWebView.swift; sourceTree = "<group>"; };
 		A9C7F42063D9BBB4D7ACF48A /* CommandRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRegistry.swift; sourceTree = "<group>"; };
+		ABCFFBB1F61999C5888CE296 /* FzfCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FzfCommand.swift; sourceTree = "<group>"; };
 		B2D8D1B82AF71FCC341B5BEC /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		B6B4938866CA445AC12CBD1F /* PipCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipCommand.swift; sourceTree = "<group>"; };
 		B70A780258DB00B143678D60 /* Python.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Python.xcframework; path = "Vendor/python-ios/Python.xcframework"; sourceTree = "<group>"; };
@@ -301,6 +303,7 @@
 			isa = PBXGroup;
 			children = (
 				8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */,
+				ABCFFBB1F61999C5888CE296 /* FzfCommand.swift */,
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
 				970ED7179FCCD2F3A0255A0C /* GoCommand.swift */,
 				32651D168D2C1FE0671D7FA2 /* GoTools.swift */,
@@ -439,6 +442,7 @@
 				915BC5BF58132AF177D18F89 /* EditorScreen.swift in Sources */,
 				79D400A8743762C71C830F2D /* EditorWebView.swift in Sources */,
 				27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */,
+				4DF5601A0E1A68BC4D046F86 /* FzfCommand.swift in Sources */,
 				74C1FD2365AC5A7ECC4935D5 /* GitCommands.swift in Sources */,
 				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,

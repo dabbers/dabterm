@@ -117,6 +117,11 @@ final class ShellSession: ObservableObject {
                 let n = cursor - start
                 if n > 0 { lineBuffer.removeSubrange(start..<cursor); writeRaw("\u{1b}[\(n)D"); cursor = start; redrawFromCursor() }
             case "\t": complete()
+            case "\u{12}": // ctrl-r: fuzzy history search; the pick lands on the prompt
+                let typed = String(lineBuffer)
+                writeRaw("\r\n")
+                run(line: "fzf --history --replace" + (typed.isEmpty ? "" : " --query " + typed))
+                return
             default:
                 if c.isASCII, let v = c.asciiValue, v < 32 { break }
                 lineBuffer.insert(c, at: cursor); cursor += 1
@@ -216,6 +221,9 @@ final class ShellSession: ObservableObject {
         run(line: line)
     }
 
+    /// A line a command wants placed on the next prompt (fzf --replace, Ctrl-R).
+    var pendingLine: String? = nil
+
     /// Runs a command line as if typed. Used by the UI (e.g. the SSH hosts list).
     func run(line: String) {
         runningTask = Task { [weak self] in
@@ -223,6 +231,7 @@ final class ShellSession: ObservableObject {
             await self.execute(line: line)
             self.runningTask = nil
             self.prompt()
+            if let p = self.pendingLine { self.pendingLine = nil; self.replaceLine(p) }
         }
     }
 
