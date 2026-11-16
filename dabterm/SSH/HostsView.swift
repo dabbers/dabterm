@@ -42,7 +42,7 @@ struct HostsView: View {
                         }
                     }
                 }
-                Section("Keys  (~/ssh)") {
+                Section("Keys  (Keychain; public halves in ~/ssh)") {
                     ForEach(keys, id: \.self) { k in
                         let pub = (try? String(contentsOf: URL(fileURLWithPath: k.path + ".pub"), encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines)
                         VStack(alignment: .leading, spacing: 4) {
@@ -57,10 +57,10 @@ struct HostsView: View {
                             }
                             if let pub { Text(SSHKeys.fingerprint(publicLine: pub)).font(.caption2.monospaced()).foregroundStyle(.secondary) }
                         }
-                        .swipeActions { Button(role: .destructive) { try? FileManager.default.removeItem(at: k); try? FileManager.default.removeItem(at: URL(fileURLWithPath: k.path + ".pub")); reload() } label: { Label("Delete", systemImage: "trash") } }
+                        .swipeActions { Button(role: .destructive) { SSHKeyStore.delete(name: k.lastPathComponent); reload() } label: { Label("Delete", systemImage: "trash") } }
                     }
                     Button { showKeygen = true } label: { Label("Generate new ed25519 key", systemImage: "plus.circle") }
-                    Text("Private keys never leave this folder unless you export them. You can also drop existing keys into Files → dabterm → ssh.").font(.footnote).foregroundStyle(.secondary)
+                    Text("Private keys are kept in the iOS Keychain: this device only, never in backups or the Files folder. Only the .pub is in ~/ssh. A private key dropped into Files → dabterm → ssh is moved into the Keychain the next time keys are used.").font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
                     Button { app.editorRequest = Workspace.sshConfig; app.editorFolder = Workspace.sshDir; app.tab = .editor } label: { Label("Edit ~/ssh/config", systemImage: "doc.text") }
@@ -83,9 +83,7 @@ struct HostsView: View {
     }
     private func reload() {
         config = SSHConfig.load()
-        let items = (try? FileManager.default.contentsOfDirectory(at: Workspace.sshDir, includingPropertiesForKeys: nil)) ?? []
-        keys = items.filter { $0.pathExtension != "pub" && !["config", "known_hosts"].contains($0.lastPathComponent) && !Workspace.isDirectory($0) && FileManager.default.fileExists(atPath: $0.path + ".pub") || ($0.lastPathComponent.hasPrefix("id_") && $0.pathExtension != "pub") }
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        keys = SSHKeyStore.names().map { Workspace.sshDir.appendingPathComponent($0) }
     }
 }
 
@@ -121,7 +119,7 @@ struct HostEditor: View {
             }
             .onAppear {
                 portText = host.port.map(String.init) ?? ""
-                keyFiles = ((try? FileManager.default.contentsOfDirectory(atPath: Workspace.sshDir.path)) ?? []).filter { $0.hasPrefix("id_") && !$0.hasSuffix(".pub") }
+                keyFiles = SSHKeyStore.names()
             }
         }
     }

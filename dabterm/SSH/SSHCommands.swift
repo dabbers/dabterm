@@ -252,14 +252,16 @@ struct SSHKeygenCommand: Command {
         let type = flags["t"] ?? "ed25519"
         guard type == "ed25519" else { throw CommandError("only ed25519 generation is supported on-device (use -t ed25519)") }
         if let n = flags["N"], !n.isEmpty { throw CommandError("passphrase-protected key generation is not supported yet; generate without -N") }
-        if FileManager.default.fileExists(atPath: file.path) { throw CommandError("\(Workspace.display(file)) already exists") }
+        let keyName = file.lastPathComponent
+        if SSHKeyStore.has(keyName) || FileManager.default.fileExists(atPath: file.path) { throw CommandError("a key named \(keyName) already exists") }
         let deviceName = await MainActor.run { UIDeviceName.current }
         let comment = flags["C"] ?? "dabterm@\(deviceName)"
         let (priv, pub) = SSHKeys.generateEd25519(comment: comment)
         try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try priv.write(to: file, atomically: true, encoding: .utf8)
+        // The private key goes to the Keychain (this device only); only the public half is a file.
+        SSHKeyStore.store(name: keyName, pem: priv)
         try (pub + "\n").write(to: URL(fileURLWithPath: file.path + ".pub"), atomically: true, encoding: .utf8)
-        ctx.print("Your identification has been saved in \(Workspace.display(file))\nYour public key has been saved in \(Workspace.display(file)).pub\nThe key fingerprint is:\n\(SSHKeys.fingerprint(publicLine: pub)) \(comment)\n\n\(pub)")
+        ctx.print("Your identification has been saved in the Keychain as \(keyName)\nYour public key has been saved in \(Workspace.display(file)).pub\nThe key fingerprint is:\n\(SSHKeys.fingerprint(publicLine: pub)) \(comment)\n\n\(pub)")
         return 0
     }
 }

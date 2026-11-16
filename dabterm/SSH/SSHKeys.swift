@@ -9,7 +9,7 @@ enum SSHKeys {
     enum LoadedKey { case ed25519(Curve25519.Signing.PrivateKey); case rsa(Insecure.RSA.PrivateKey) }
 
     static func load(_ url: URL, passphrase: String? = nil) throws -> LoadedKey {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { throw CommandError("cannot read key \(Workspace.display(url))") }
+        guard let text = SSHKeyStore.privateKeyText(for: url) else { throw CommandError("no key named \(url.lastPathComponent) (ssh-keygen makes one; keys live in the Keychain)") }
         let pass = passphrase.map { Data($0.utf8) }
         if let k = try? Curve25519.Signing.PrivateKey(sshEd25519: text, decryptionKey: pass) { return .ed25519(k) }
         if let k = try? Insecure.RSA.PrivateKey(sshRsa: text, decryptionKey: pass) { return .rsa(k) }
@@ -26,11 +26,13 @@ enum SSHKeys {
         return Data(base64Encoded: lines.joined())
     }
 
-    /// Finds candidate identities: explicit IdentityFile, then default names in ~/ssh.
+    /// Finds candidate identities: explicit IdentityFile, then default names. Keys are named like
+    /// files in ~/ssh for familiarity, but the private halves are in the Keychain.
     static func candidates(for host: SSHHostConfig) -> [URL] {
         var list: [URL] = []
         if let i = host.resolvedIdentity() { list.append(i) }
-        for n in ["id_ed25519", "id_rsa", "id_ecdsa"] { let u = Workspace.sshDir.appendingPathComponent(n); if FileManager.default.fileExists(atPath: u.path) { list.append(u) } }
+        let have = Set(SSHKeyStore.names())
+        for n in ["id_ed25519", "id_rsa", "id_ecdsa"] where have.contains(n) { list.append(Workspace.sshDir.appendingPathComponent(n)) }
         return list
     }
 
@@ -88,4 +90,50 @@ enum SSHKeys {
 extension ByteBuffer {
     @discardableResult mutating func writeSSHString(_ s: String) -> Int { writeInteger(UInt32(s.utf8.count)) + writeString(s) }
     @discardableResult mutating func writeSSHString<C: Collection>(_ bytes: C) -> Int where C.Element == UInt8 { writeInteger(UInt32(bytes.count)) + writeBytes(bytes) }
+}
+
+
+/// Private keys live in the iOS Keychain (this device only, only while unlocked, never backed
+/// up), not in the Files-visible folder. A key is addressed by its name (id_ed25519, ...); its
+/// public half stays in ~/ssh/<name>.pub so it can be copied and shared. Private-key files found
+/// in ~/ssh are moved into the Keychain the first time keys are used.
+enum SSHKeyStore {
+    static let prefix = "ssh.key."
+
+    static func names() -> [String] {
+        migrateFiles()
+        return Keychain.keys(withPrefix: prefix).map { String($0.dropFirst(prefix.count)) }
+    }
+    static func has(_ name: String) -> Bool { names().contains(name) }
+
+    /// The private key text for a name or a ~/ssh path (a file at that path is imported first).
+    static func privateKeyText(for url: URL) -> String? {
+        if FileManager.default.fileExists(atPath: url.path), let text = try? String(contentsOf: url, encoding: .utf8), looksPrivate(text) {
+            store(name: url.lastPathComponent, pem: text)
+            try? FileManager.default.removeItem(at: url)
+        }
+        return Keychain.get(prefix + url.lastPathComponent)
+    }
+    static func privateKeyText(named name: String) -> String? { privateKeyText(for: Workspace.sshDir.appendingPathComponent(name)) }
+
+    static func store(name: String, pem: String) { Keychain.setDeviceOnly(pem, for: prefix + name) }
+    static func delete(name: String) {
+        Keychain.delete(prefix + name)
+        try? FileManager.default.removeItem(at: Workspace.sshDir.appendingPathComponent(name + ".pub"))
+    }
+
+    /// Moves any private-key files in ~/ssh into the Keychain. Returns the names moved.
+    @discardableResult
+    static func migrateFiles() -> [String] {
+        var moved: [String] = []
+        let items = (try? FileManager.default.contentsOfDirectory(at: Workspace.sshDir, includingPropertiesForKeys: nil)) ?? []
+        for u in items where u.pathExtension != "pub" && !["config", "known_hosts"].contains(u.lastPathComponent) && !Workspace.isDirectory(u) {
+            guard let text = try? String(contentsOf: u, encoding: .utf8), looksPrivate(text) else { continue }
+            store(name: u.lastPathComponent, pem: text)
+            try? FileManager.default.removeItem(at: u)
+            moved.append(u.lastPathComponent)
+        }
+        return moved
+    }
+    private static func looksPrivate(_ text: String) -> Bool { text.contains("PRIVATE KEY-----") }
 }

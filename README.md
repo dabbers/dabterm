@@ -50,6 +50,13 @@ build still succeeds and `go` explains it is missing.
 folder when nothing is piped; type to filter, arrows to move, Enter picks. `ls | fzf`,
 `edit $(fzf)`. Ctrl-R at the prompt searches the shell history with it.
 
+**SSH keys.** Private keys are kept in the iOS Keychain, readable only on this device while it is
+unlocked and never included in backups; only the `.pub`, `config` and `known_hosts` live in
+`~/ssh`, where you can see and share them. `ssh-keygen` writes straight to the Keychain. A
+private-key file dropped into `~/ssh` from another machine is moved into the Keychain the next
+time keys are used. (Other apps cannot read the app's folder either, but it is visible in Files,
+goes into backups, and is readable by a paired computer, which is too much exposure for a key.)
+
 **Shells.** dsh is the built-in shell and the default. The session runs every line through a
 `ShellProvider` (dabterm/Shell/ShellProvider.swift), so other shells can be compiled in: a shell
 does its own parsing and control flow and runs the app's commands as its programs. `chsh` lists
@@ -109,7 +116,7 @@ long-press selection still work too.
 **git (Go framework).** With the Go framework bundled, `git` is go-git: real repositories with
 history in `.git`, local commits, `log`, `diff`, `show`, `branch`, `checkout`, `merge` and `pull`
 (fast-forward), `fetch`, `push`, `remote`, `tag`, `reset`, `rev-parse`. GitHub over HTTPS uses the
-`gh` login token; other remotes use the keys in `~/ssh`. Folders cloned by the API git below (a
+`gh` login token; other remotes use the SSH keys from the Keychain. Folders cloned by the API git below (a
 `.dabgit` folder) keep using it until re-cloned. No stash or rebase.
 
 **git (API, without the Go framework).** `git clone owner/repo`, `status`, `add`, `commit -m` (commits *and* pushes), `pull`, `log`,

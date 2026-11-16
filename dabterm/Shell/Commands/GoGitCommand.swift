@@ -19,7 +19,10 @@ struct GoGitCommand: Command {
         let cfg = YaegiNewGitConfig()!
         cfg.cwd = ctx.cwd.path
         cfg.token = Keychain.get(Keychain.githubTokenKey) ?? ""
-        cfg.sshDir = Workspace.sshDir.path
+        // SSH remotes: the first default key from the Keychain, passed as text, never as a path.
+        if let name = ["id_ed25519", "id_ecdsa", "id_rsa"].first(where: { SSHKeyStore.has($0) }), let pem = SSHKeyStore.privateKeyText(named: name) {
+            cfg.sshKey = pem; cfg.sshKeyName = name
+        }
         cfg.userName = UserDefaults.standard.string(forKey: "git.user.name") ?? ""
         cfg.userEmail = UserDefaults.standard.string(forKey: "git.user.email") ?? ""
         let out = GoOutput(ctx.out), err = GoOutput(ctx.err)

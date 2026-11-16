@@ -30,7 +30,9 @@ import (
 // GitConfig carries what the shell knows: the working directory, GitHub token, SSH key folder and
 // the user identity for commits.
 type GitConfig struct {
-	Cwd, Token, SSHDir, UserName, UserEmail string
+	Cwd, Token, UserName, UserEmail string
+	// SSHKey is the private key text (from the app's Keychain) and SSHKeyName its name.
+	SSHKey, SSHKeyName string
 }
 
 func NewGitConfig() *GitConfig { return &GitConfig{} }
@@ -64,18 +66,15 @@ func (c *gitCtx) auth(url string) (transport.AuthMethod, error) {
 		}
 		return nil, nil
 	case strings.HasPrefix(url, "git@"), strings.HasPrefix(url, "ssh://"):
-		for _, n := range []string{"id_ed25519", "id_ecdsa", "id_rsa"} {
-			p := filepath.Join(c.cfg.SSHDir, n)
-			if _, err := os.Stat(p); err == nil {
-				keys, err := gitssh.NewPublicKeysFromFile("git", p, "")
-				if err != nil {
-					return nil, fmt.Errorf("%s: %v (passphrase-protected keys are not supported here)", n, err)
-				}
-				keys.HostKeyCallback = ssh.InsecureIgnoreHostKey() //nolint: host keys are checked by the ssh command, not here
-				return keys, nil
-			}
+		if c.cfg.SSHKey == "" {
+			return nil, errors.New("no SSH key (id_ed25519, id_ecdsa or id_rsa); ssh-keygen makes one")
 		}
-		return nil, errors.New("no SSH key in ~/ssh (id_ed25519, id_ecdsa or id_rsa); ssh-keygen makes one")
+		keys, err := gitssh.NewPublicKeys("git", []byte(c.cfg.SSHKey), "")
+		if err != nil {
+			return nil, fmt.Errorf("%s: %v (passphrase-protected keys are not supported here)", c.cfg.SSHKeyName, err)
+		}
+		keys.HostKeyCallback = ssh.InsecureIgnoreHostKey() //nolint: host keys are checked by the ssh command, not here
+		return keys, nil
 	}
 	return nil, nil
 }
