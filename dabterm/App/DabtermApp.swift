@@ -107,14 +107,7 @@ final class AppModel: ObservableObject {
 @MainActor
 final class KeyboardInset: ObservableObject {
     @Published var bottom: CGFloat = 0
-    /// Height of the system keyboard alone (frame minus our bar), learned whenever the device is
-    /// not half-open. Half-open, the reported frame also contains the empty band iOS leaves between
-    /// the accessory at the top of the lower screen and the keys at its bottom.
-    private var bareKeyboard: CGFloat {
-        get { CGFloat(UserDefaults.standard.double(forKey: "bareKeyboardHeight")) }
-        set { UserDefaults.standard.set(Double(newValue), forKey: "bareKeyboardHeight") }
-    }
-    private weak var dockedBar: KeyBar?
+    private var hiding = false
     init() {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let frame = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
@@ -122,51 +115,32 @@ final class KeyboardInset: ObservableObject {
             // Empty frames while the keyboard animates away mean "hidden", not a keyboard at the top.
             guard frame.height >= 50, frame.width >= 100 else { self.bottom = 0; return }
             // Our padding sits above the bottom safe area, which the keyboard covers: take it off.
-            // Measure against the window, not the screen: half-open, iOS shrinks the window to the
-            // upper half and only the overlap matters.
+            // On a half-open foldable the frame starts above the hinge and includes iOS's own gap
+            // over it; the keys sit below. That is the keyboard's layout, so we simply pad by it.
             let window = UIApplication.keyWindow
             let safe = window?.safeAreaInsets.bottom ?? 0
             let bottomEdge = window?.frame.maxY ?? screen.bounds.height
+            self.hiding = frame.minY >= bottomEdge
             self.bottom = max(0, min(frame.height, max(0, bottomEdge - frame.minY)) - safe)
             HingeMonitor.shared.log("kb frame=\(frame) screen=\(screen.bounds.size) window=\(window?.frame ?? .zero) inset=\(self.bottom)")
-            self.fitBand(keyboardFrame: frame, screen: screen.bounds.size)
         }
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.hiding = true
             self?.bottom = 0
-            self?.dockedBar?.band = 0
         }
         // The notification's frame is only an estimate on a foldable; the docked key bar says where
         // the keyboard really starts, so once it is on screen its position wins.
         KeyBar.onPlaced = { [weak self] bar in
-            guard let self, let w = bar.window else { return }
-            self.dockedBar = bar
+            guard let self, !self.hiding, let w = bar.window, let app = UIApplication.keyWindow else { return }
             let r = w.convert(bar.bounds, from: bar)
-            guard let app = UIApplication.keyWindow else { return }
             let bottomEdge = app.frame.maxY
-            guard r.height > 0, r.minY > 0, r.minY < bottomEdge + r.height else { return }
+            guard r.height > 0, r.minY > 0, r.minY < bottomEdge else { return }
             let v = max(0, bottomEdge - r.minY - app.safeAreaInsets.bottom)
             if abs(v - self.bottom) > 0.5 {
                 self.bottom = v
                 HingeMonitor.shared.log("kb bar at \(r) window bottom=\(bottomEdge) inset=\(v)")
             }
         }
-    }
-
-    /// Half-open in portrait: grow the bar by the empty band so the strip sits right above the keys.
-    private func fitBand(keyboardFrame frame: CGRect, screen: CGSize) {
-        guard let bar = dockedBar ?? (UIApplication.firstResponder?.inputAccessoryView as? KeyBar) else { return }
-        let split = HingeMonitor.shared.partiallyOpen && screen.height > screen.width
-        if !split {
-            if bar.band != 0 { bar.band = 0; UIApplication.firstResponder?.reloadInputViews() }
-            else if screen.height > screen.width, frame.height > bar.barHeight { bareKeyboard = frame.height - bar.barHeight }
-            return
-        }
-        guard bar.band == 0, bareKeyboard > 0 else { return }
-        let band = frame.height - bar.barHeight - bareKeyboard
-        guard band > 20 else { return }
-        bar.band = band
-        HingeMonitor.shared.log("kb band=\(band) bare=\(bareKeyboard)")
-        UIApplication.firstResponder?.reloadInputViews()
     }
 }
 
