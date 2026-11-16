@@ -16,6 +16,7 @@
 		1CDF8692A963C90D57A10EAF /* ShellIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F44612343221C54A754E77 /* ShellIO.swift */; };
 		27DBC644659D7EC862EB715D /* FileCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */; };
 		2C07E459A89A51460BE689B8 /* SSHConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123B426355E92471BC4F0796 /* SSHConfig.swift */; };
+		31EB400870BBC30A181CCCED /* GoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32651D168D2C1FE0671D7FA2 /* GoTools.swift */; };
 		33370D010DA6AF05C6BE994F /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CC58D405C3F44BBBF6487A /* Workspace.swift */; };
 		35DDC72488B23E63E780473C /* Hinge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 070B97D19734F6BC68D3449B /* Hinge.swift */; };
 		3A6F015A0F54AC145D2A1F51 /* SSHCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472EA149190C7C58CC34DA91 /* SSHCommands.swift */; };
@@ -75,6 +76,7 @@
 		070B97D19734F6BC68D3449B /* Hinge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hinge.swift; sourceTree = "<group>"; };
 		123B426355E92471BC4F0796 /* SSHConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfig.swift; sourceTree = "<group>"; };
 		1E38296F173038059B88B9A2 /* TerminalContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalContainer.swift; sourceTree = "<group>"; };
+		32651D168D2C1FE0671D7FA2 /* GoTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoTools.swift; sourceTree = "<group>"; };
 		35B48B2FA74A39FD3D45151C /* EditorScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorScreen.swift; sourceTree = "<group>"; };
 		38A6CCF8C69F84680140B1C6 /* HostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsView.swift; sourceTree = "<group>"; };
 		3B0878FEB66175CF4A9BCAEA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 				8E0B72C0FAB41A16E0182DFE /* FileCommands.swift */,
 				5A669EA6D9D475F739EE9CF1 /* GitCommands.swift */,
 				970ED7179FCCD2F3A0255A0C /* GoCommand.swift */,
+				32651D168D2C1FE0671D7FA2 /* GoTools.swift */,
 				6B894EB6EE88036BBC31CDE4 /* JSCommand.swift */,
 				F3EAC79FA26FEF42950853AC /* NetworkCommands.swift */,
 				3EDC494CE30036B47A790FFE /* PythonCommand.swift */,
@@ -434,6 +437,7 @@
 				A530635D6DE90DAD49CEEC87 /* GitHubClient.swift in Sources */,
 				AC0F73AEE9F180B8723E6525 /* GitRepo.swift in Sources */,
 				0C05C6BD009F0F5D12924202 /* GoCommand.swift in Sources */,
+				31EB400870BBC30A181CCCED /* GoTools.swift in Sources */,
 				35DDC72488B23E63E780473C /* Hinge.swift in Sources */,
 				159285B34C5A1F853F6E293F /* HostsView.swift in Sources */,
 				A5B080BF662C021DDFD8DEE3 /* ICMP.swift in Sources */,

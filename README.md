@@ -18,7 +18,7 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Group | Commands |
 |---|---|
 | Files | `ls cd pwd cat mkdir rm mv cp touch find tree du stat file edit open` |
-| Text | `echo printf grep head tail wc sort uniq cut tr sed diff jq base64 xxd tee seq` |
+| Text (Go framework adds `awk yq gofmt tar zip unzip gzip`) | `echo printf grep head tail wc sort uniq cut tr sed diff jq base64 xxd tee seq` |
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
@@ -53,6 +53,10 @@ bundled) is listed but cannot be selected, and dsh is used. The Go framework bri
 bash-syntax shell (mvdan/sh) with functions, loops, `$(...)`, heredocs, globbing and arrays.
 Pipes between commands are buffered there, and a plain single command still runs through dsh so
 `ssh` and the REPLs keep the keyboard. `cd` and the environment stay in sync both ways.
+
+**Go-framework tools.** Builds that bundle the Go framework also get `awk` (goawk), a full `jq`
+(gojq; it replaces the path-only jq), `yq` (YAML in and out around the same jq engine), `gofmt`,
+and `tar` / `zip` / `unzip` / `gzip` / `gunzip`.
 
 **WebAssembly.** `wasm file.wasm [args]` runs WASI modules on WasmKit, a pure-Swift interpreter
 (App Store safe). stdin/stdout/stderr are wired to the shell, `~` is pre-opened as `/` and the

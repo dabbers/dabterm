@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(Yaegi)
+import Yaegi
+#endif
 
 final class CommandRegistry {
     static let shared = CommandRegistry()
@@ -32,6 +35,11 @@ final class CommandRegistry {
             GitCommand(), GhCommand(), PackCLICommand(),
         ]
         for c in list { commands[c.name] = c }
+        #if canImport(Yaegi)
+        // Tools from the Go framework; its jq (the full language) replaces the path-only one.
+        for c in GoTools.all { commands[c.name] = c }
+        commands["gunzip"] = AliasedCommand(name: "gunzip", target: "gzip", prefix: ["-d"])
+        #endif
         commands["ll"] = AliasedCommand(name: "ll", target: "ls", prefix: ["-la"])
         commands["la"] = AliasedCommand(name: "la", target: "ls", prefix: ["-a"])
         commands["nslookup"] = AliasedCommand(name: "nslookup", target: "dig", prefix: [])
