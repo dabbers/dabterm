@@ -63,9 +63,11 @@ final class PythonRuntime {
         let bootstrap = """
         import sys, os, io, runpy, traceback, code, builtins
         def _dab_run(mode, target, argv, out_fd, err_fd, in_fd, cwd):
-            out = os.fdopen(out_fd, 'w', buffering=1, closefd=False)
-            err = os.fdopen(err_fd, 'w', buffering=1, closefd=False)
-            inp = os.fdopen(in_fd, 'r', buffering=1, closefd=False)
+            # UTF-8 explicitly: the process locale is C, so the default would be ASCII and the
+            # first non-ASCII character (the REPL banner has one) would raise UnicodeEncodeError.
+            out = os.fdopen(out_fd, 'w', buffering=1, closefd=False, encoding='utf-8', errors='replace')
+            err = os.fdopen(err_fd, 'w', buffering=1, closefd=False, encoding='utf-8', errors='replace')
+            inp = os.fdopen(in_fd, 'r', buffering=1, closefd=False, encoding='utf-8', errors='replace')
             saved = (sys.stdout, sys.stderr, sys.stdin, sys.argv, list(sys.path))
             sys.stdout, sys.stderr, sys.stdin = out, err, inp
             os.chdir(cwd)
