@@ -8,6 +8,8 @@ import UIKit
 final class HingeMonitor {
     static let shared = HingeMonitor()
     private(set) var partiallyOpen = false
+    /// Called after every hinge update (status or angle).
+    var onChange: (() -> Void)?
     private var states: [ObjectIdentifier: Bool] = [:]
     private var hadHinge = false
     private let logURL = Workspace.root.appendingPathComponent("hinge.log")
@@ -36,6 +38,7 @@ final class HingeMonitor {
                         self.states[id] = nil
                     }
                     self.partiallyOpen = self.states.values.contains(true)
+                    self.onChange?()
                 }
             }
             view.addInteraction(interaction)

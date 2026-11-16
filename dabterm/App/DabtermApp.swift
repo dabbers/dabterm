@@ -123,6 +123,25 @@ final class AppModel: ObservableObject {
 final class KeyboardInset: ObservableObject {
     @Published var bottom: CGFloat = 0
     private var hiding = false
+    private weak var dockedBar: KeyBar?
+    private var settleWork: DispatchWorkItem?
+    private func scheduleSettle() {
+        settleWork?.cancel()
+        let w = DispatchWorkItem { [weak self] in self?.settle() }
+        settleWork = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: w)
+    }
+    private func settle() {
+        guard !hiding, let bar = dockedBar, let bw = bar.window, let app = UIApplication.keyWindow else { return }
+        let r = bw.convert(bar.bounds, from: bar)
+        let bottomEdge = app.frame.maxY
+        guard r.height > 0, r.minY > 0, r.minY < bottomEdge else { return }
+        let v = max(0, bottomEdge - r.minY - app.safeAreaInsets.bottom)
+        if abs(v - bottom) > 0.5 {
+            HingeMonitor.shared.log("kb settle: bar at y=\(r.minY), inset \(bottom) -> \(v)")
+            bottom = v
+        }
+    }
     init() {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let frame = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
@@ -143,6 +162,15 @@ final class KeyboardInset: ObservableObject {
             self?.hiding = true
             self?.bottom = 0
         }
+        // The notifications are not the last word on a foldable: at the end of a bent-to-flat
+        // transition iOS sends one more with the stale bent frame. So once things settle, after a
+        // keyboard change or a hinge move, measure where the key bar (the keyboard's accessory)
+        // actually is and correct the inset from that.
+        KeyBar.onPlaced = { [weak self] bar in self?.dockedBar = bar }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.scheduleSettle()
+        }
+        HingeMonitor.shared.onChange = { [weak self] in self?.scheduleSettle() }
         // Half a second after any keyboard change, record where things actually ended up.
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidChangeFrameNotification, object: nil, queue: .main) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
