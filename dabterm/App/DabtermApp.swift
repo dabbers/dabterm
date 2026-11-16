@@ -148,16 +148,23 @@ final class KeyboardInset: ObservableObject {
 
 struct RootView: View {
     @EnvironmentObject var model: AppModel
+    private func tabContent<V: View>(_ v: V, _ tab: AppModel.Tab) -> some View {
+        let on = model.tab == tab
+        return v.opacity(on ? 1 : 0).allowsHitTesting(on).accessibilityHidden(!on).zIndex(on ? 1 : 0)
+    }
     @StateObject private var keyboardInset = KeyboardInset()
     var body: some View {
         // The system tab bar is never shown: iOS 26 hides it under the keyboard and floats it as a
         // big pill otherwise. We draw our own slim one above the keyboard.
+        // Not a TabView: its tab controller adapts to the fold of a half-open iPhone Duo on its own
+        // (pushing the content down by the keyboard's gap over the hinge) on top of our padding. All
+        // four tabs stay alive, stacked; only the selected one is visible and tappable.
         VStack(spacing: 0) {
-            TabView(selection: $model.tab) {
-                TerminalTabView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.terminal)
-                EditorScreen().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.editor)
-                HostsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.hosts)
-                SettingsView().toolbar(.hidden, for: .tabBar).tag(AppModel.Tab.settings)
+            ZStack {
+                tabContent(TerminalTabView(), .terminal)
+                tabContent(EditorScreen(), .editor)
+                tabContent(HostsView(), .hosts)
+                tabContent(SettingsView(), .settings)
             }
             AppTabBar(selection: $model.tab)
         }
