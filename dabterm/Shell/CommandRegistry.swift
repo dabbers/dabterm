@@ -23,7 +23,7 @@ final class CommandRegistry {
             // shell
             HelpCommand(), ClearCommand(), HistoryCommand(), EnvCommand(), ExportCommand(), UnsetCommand(), WhichCommand(),
             DateCommand(), UnameCommand(), SleepCommand(), TrueCommand(), FalseCommand(), ExitCommand(), ShCommand(),
-            EditCommand(), OpenCommand(), JSCommand(), WasmCommand(), PythonCommand(), GoCommand(), ChshCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
+            EditCommand(), OpenCommand(), JSCommand(), WasmCommand(), PythonCommand(), GoCommand(), ChshCommand(), XargsCommand(), TimeCommand(), WatchCommand(), LessCommand(), PatchCommand(), SqliteCommand(), PipCommand(), AliasCommand(), SeqCommand(), YesCommand(), TeeCommand(), PrintenvCommand(),
             // network
             PingCommand(), TracerouteCommand(), DigCommand(), HostCommand(), CurlCommand(), WgetCommand(), NcCommand(),
             IfconfigCommand(), WhoisCommand(), PortscanCommand(), HttpCommand(),
@@ -41,6 +41,7 @@ final class CommandRegistry {
         commands["gunzip"] = AliasedCommand(name: "gunzip", target: "gzip", prefix: ["-d"])
         #endif
         commands["ll"] = AliasedCommand(name: "ll", target: "ls", prefix: ["-la"])
+        commands["more"] = AliasedCommand(name: "more", target: "less", prefix: [])
         commands["la"] = AliasedCommand(name: "la", target: "ls", prefix: ["-a"])
         commands["nslookup"] = AliasedCommand(name: "nslookup", target: "dig", prefix: [])
         commands["tracert"] = AliasedCommand(name: "tracert", target: "traceroute", prefix: [])

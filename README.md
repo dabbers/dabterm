@@ -22,8 +22,8 @@ and `.sh` scripts in `~/bin` run by name. Built-ins:
 | Network | `ping traceroute dig host curl wget http nc portscan ifconfig whois` |
 | Crypto | `openssl shasum md5 uuid ssh-keygen` |
 | Remote | `ssh scp ssh-copy-id git gh` |
-| Scripting | `python` (CPython 3.13), `go` (Yaegi), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
-| Shell | `help clear history env export unset alias which date uname sleep sh chsh` |
+| Scripting | `python` + `pip` (CPython 3.13), `go` (Yaegi), `js` / `node` (JavaScriptCore), `wasm` (WASI), `sh` |
+| Shell | `help clear history env export unset alias which date uname sleep sh chsh xargs time watch less patch sqlite3` |
 
 `ping` and `traceroute` use ICMP datagram sockets (no root needed on iOS). `dig` is a small DNS
 client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
@@ -31,8 +31,9 @@ client (A/AAAA/MX/TXT/NS/CNAME/SRV/PTR/SOA/CAA, `@server`, `+short`).
 **Python.** Real CPython 3.13 (the official iOS build, via BeeWare's Python-Apple-support), bundled
 with the full standard library including `ssl`, `sqlite3`, `hashlib`, `asyncio`, `ctypes`, `decimal`,
 `zlib`/`bz2`/`lzma`. `python file.py [args]`, `python -c`, `python -m module`, piped stdin, or a REPL;
-`.py` files in `~/bin` run by name; `input()` reads from the terminal. Pure-Python packages dropped
-into `~/site-packages` are importable. The interpreter is embedded (one per process, scripts run one
+`.py` files in `~/bin` run by name; `input()` reads from the terminal. `pip install pkg` fetches pure-Python wheels (and their
+dependencies) from PyPI into `~/site-packages`; `pip list|show|uninstall` manage them. Packages
+with compiled extensions cannot be installed, which is an iOS limit, not a pip one. The interpreter is embedded (one per process, scripts run one
 at a time), which is what Apple allows. The framework is not in git: run `scripts/fetch-python.sh`
 before building, or the build still succeeds and `python` explains it is missing. ~22 MB in the app.
 

@@ -38,6 +38,7 @@ final class PythonRuntime {
         if initialized { return initError }
         initialized = true
         guard let lib = Self.stdlibRoot else { initError = Self.unavailableReason; return initError }
+        try? FileManager.default.createDirectory(at: Workspace.root.appendingPathComponent("site-packages"), withIntermediateDirectories: true)
         var config = PyConfig()
         PyConfig_InitIsolatedConfig(&config)
         defer { PyConfig_Clear(&config) }
@@ -61,8 +62,9 @@ final class PythonRuntime {
         }
         // bootstrap: a helper that runs one command with redirected stdio and reports the exit code
         let bootstrap = """
-        import sys, os, io, runpy, traceback, code, builtins
+        import sys, os, io, runpy, traceback, code, builtins, importlib
         def _dab_run(mode, target, argv, out_fd, err_fd, in_fd, cwd):
+            importlib.invalidate_caches()   # packages installed by pip since the last run
             # UTF-8 explicitly: the process locale is C, so the default would be ASCII and the
             # first non-ASCII character (the REPL banner has one) would raise UnicodeEncodeError.
             out = os.fdopen(out_fd, 'w', buffering=1, closefd=False, encoding='utf-8', errors='replace')
